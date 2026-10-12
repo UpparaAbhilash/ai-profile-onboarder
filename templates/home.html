@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+
+{% block title %}Home · Profile Onboarder{% endblock %}
+
+{% block content %}
+<div class="p-4 p-md-5 mb-4 bg-body-tertiary rounded-3 border">
+    <h1 class="display-6 fw-semibold">AI-Powered Profile Onboarder</h1>
+    <p class="lead mb-0">
+        Upload a PDF resume and get a structured, editable candidate profile in minutes.
+    </p>
+</div>
+
+<h2 class="h5 mb-3">How it works</h2>
+<div class="row g-3">
+    <div class="col-md-3">
+        <div class="card h-100 step-card">
+            <div class="card-body">
+                <span class="badge text-bg-primary mb-2">1</span>
+                <h3 class="h6">Upload</h3>
+                <p class="small text-muted mb-0">Upload your resume as a PDF.</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card h-100 step-card">
+            <div class="card-body">
+                <span class="badge text-bg-primary mb-2">2</span>
+                <h3 class="h6">AI parsing</h3>
+                <p class="small text-muted mb-0">Your details are extracted into a structured profile.</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card h-100 step-card">
+            <div class="card-body">
+                <span class="badge text-bg-primary mb-2">3</span>
+                <h3 class="h6">Review</h3>
+                <p class="small text-muted mb-0">Check and correct anything the AI missed.</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card h-100 step-card">
+            <div class="card-body">
+                <span class="badge text-bg-primary mb-2">4</span>
+                <h3 class="h6">Apply</h3>
+                <p class="small text-muted mb-0">Set your availability and apply for jobs.</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% if user.is_authenticated %}
+    <p class="mt-4 mb-0">You are logged in as <strong>{{ user.email }}</strong>.</p>
+{% endif %}
+{% endblock %}
