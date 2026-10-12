@@ -1,0 +1,37 @@
+# Virtual environment
+.venv/
+venv/
+
+# Python cache
+__pycache__/
+*.py[cod]
+
+# Secrets — NEVER commit these
+.env
+*.env.local
+
+# User uploads (resumes contain personal data)
+media/
+
+# Collected static files (generated in deployment)
+staticfiles/
+
+# Local databases and logs
+db.sqlite3
+*.log
+logs/
+
+# Celery
+celerybeat-schedule*
+celerybeat.pid
+
+# Testing / coverage
+.coverage
+htmlcov/
+.pytest_cache/
+
+# Editor / OS
+.vscode/
+.idea/
+Thumbs.db
+.DS_Store
