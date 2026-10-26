@@ -29,15 +29,18 @@ def env_list(name: str, default: str = "") -> list[str]:
     return [item.strip() for item in os.getenv(name, default).split(",") if item.strip()]
 
 
+def env_required(name: str) -> str:
+    """Read an environment variable that must be set, or fail with a clear message."""
+    value = os.getenv(name)
+    if not value:
+        raise ImproperlyConfigured(f"Environment variable {name} is not set. Check your .env file.")
+    return value
+
+
 # --------------------------------------------------------------------------
 # Core security settings
 # --------------------------------------------------------------------------
-SECRET_KEY = os.getenv("DJANGO_SECRET_KEY")
-if not SECRET_KEY:
-    raise ImproperlyConfigured(
-        "DJANGO_SECRET_KEY is not set. Copy .env.example to .env and set a value."
-    )
-
+SECRET_KEY = env_required("DJANGO_SECRET_KEY")
 DEBUG = env_bool("DJANGO_DEBUG", default=False)
 ALLOWED_HOSTS = env_list("DJANGO_ALLOWED_HOSTS", "127.0.0.1,localhost")
 
@@ -90,13 +93,27 @@ TEMPLATES = [
 WSGI_APPLICATION = "config.wsgi.application"
 
 # --------------------------------------------------------------------------
-# Database
-# Temporary SQLite database; Phase 3 switches this to MySQL.
+# Database (MySQL)
 # --------------------------------------------------------------------------
 DATABASES = {
     "default": {
-        "ENGINE": "django.db.backends.sqlite3",
-        "NAME": BASE_DIR / "db.sqlite3",
+        "ENGINE": "django.db.backends.mysql",
+        "NAME": env_required("DB_NAME"),
+        "USER": env_required("DB_USER"),
+        "PASSWORD": env_required("DB_PASSWORD"),
+        "HOST": os.getenv("DB_HOST", "localhost"),
+        "PORT": os.getenv("DB_PORT", "3306"),
+        "CONN_MAX_AGE": 60,  # reuse a connection for up to 60 seconds
+        "OPTIONS": {
+            "charset": "utf8mb4",
+            # Strict mode: MySQL rejects invalid/too-long data instead of
+            # silently truncating it.
+            "init_command": "SET sql_mode='STRICT_TRANS_TABLES'",
+        },
+        "TEST": {
+            "CHARSET": "utf8mb4",
+            "COLLATION": "utf8mb4_0900_ai_ci",
+        },
     }
 }
 

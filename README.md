@@ -15,4 +15,4 @@ Bootstrap · Celery + Redis
     copy .env.example .env   # then fill in values
 
 ## Progress
-- [x] Phase 1 — Environment setup
+- [x] Phase 3A — MySQL database connected
