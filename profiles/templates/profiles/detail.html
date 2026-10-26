@@ -79,82 +79,66 @@
         </div>
     </div>
 
-    <div class="row g-3 mb-3">
-        <div class="col-lg-6">
-            <div class="card h-100">
-                <div class="card-header fw-semibold">Personal</div>
-                <div class="card-body">
-                    <dl class="row mb-0 small">
-                        <dt class="col-5">Email (login)</dt><dd class="col-7">{{ user.email }}</dd>
-                        <dt class="col-5">Phone</dt><dd class="col-7">{{ profile.phone|default:"–" }}</dd>
-                        <dt class="col-5">Date of birth</dt><dd class="col-7">{{ profile.date_of_birth|date:"d M Y"|default:"–" }}</dd>
-                        <dt class="col-5">Aadhaar</dt><dd class="col-7">{{ profile.aadhaar_masked|default:"–" }}</dd>
-                        <dt class="col-5">Current city</dt><dd class="col-7">{{ profile.current_city|default:"–" }}</dd>
-                    </dl>
-                </div>
-            </div>
+    <!-- Profile score -->
+    <div class="card shadow-sm mb-3">
+        <div class="card-header fw-semibold d-flex justify-content-between align-items-center">
+            <span>Profile score</span>
+            <span class="fs-5">{{ score.total }}<span class="text-muted small"> / 100</span></span>
         </div>
-        <div class="col-lg-6">
-            <div class="card h-100">
-                <div class="card-header fw-semibold">Professional</div>
-                <div class="card-body">
-                    <dl class="row mb-0 small">
-                        <dt class="col-5">Experience type</dt><dd class="col-7">{{ profile.get_experience_type_display|default:"–" }}</dd>
-                        <dt class="col-5">Total experience</dt>
-                        <dd class="col-7">{% if profile.total_experience_years is not None %}{{ profile.total_experience_years }} years{% else %}–{% endif %}</dd>
-                        <dt class="col-5">Current company</dt><dd class="col-7">{{ profile.current_company|default:"–" }}</dd>
-                        <dt class="col-5">Preferred roles</dt><dd class="col-7">{{ profile.preferred_roles|join:", "|default:"–" }}</dd>
-                        <dt class="col-5">Preferred locations</dt><dd class="col-7">{{ profile.preferred_locations|join:", "|default:"–" }}</dd>
-                    </dl>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div class="card mb-3">
-        <div class="card-header fw-semibold">Skills</div>
         <div class="card-body">
-            {% for skill in profile.skills.all %}
-                <span class="badge rounded-pill text-bg-primary me-1 mb-1">{{ skill.name }}</span>
-            {% empty %}
-                <span class="text-muted small">No skills yet.</span>
-            {% endfor %}
+            <div class="progress mb-3" role="progressbar" aria-label="Profile score"
+                 aria-valuenow="{{ score.total }}" aria-valuemin="0" aria-valuemax="100" style="height: 0.75rem;">
+                <div class="progress-bar {% if score.total >= 70 %}bg-success{% elif score.total >= 40 %}bg-warning{% else %}bg-danger{% endif %}"
+                     style="width: {{ score.total }}%"></div>
+            </div>
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <h2 class="h6">Breakdown</h2>
+                    <table class="table table-sm small mb-0">
+                        <tbody>
+                            {% for item in score.breakdown.values %}
+                                <tr>
+                                    <td>{{ item.label }}</td>
+                                    <td class="text-end">{{ item.points }} / {{ item.max }}</td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                <div class="col-md-6">
+                    <h2 class="h6">How to improve</h2>
+                    {% if score.tips %}
+                        <ul class="small mb-0">
+                            {% for tip in score.tips %}
+                                <li>{{ tip.text }} <span class="badge text-bg-light border">+{{ tip.points }}</span></li>
+                            {% endfor %}
+                        </ul>
+                    {% else %}
+                        <p class="small text-muted mb-0">Your profile is complete. Great work!</p>
+                    {% endif %}
+                </div>
+            </div>
+            <p class="small text-muted mt-3 mb-0">
+                The score shows how complete and detailed your profile is. It does not judge you as a
+                person or compare you with other candidates.
+            </p>
         </div>
     </div>
-
-    {% if profile.experience_summary %}
-        <div class="card mb-3">
-            <div class="card-header fw-semibold">Summary</div>
-            <div class="card-body small">{{ profile.experience_summary }}</div>
-        </div>
-    {% endif %}
-
-    <div class="card mb-3">
-        <div class="card-header fw-semibold">Projects</div>
-        <ul class="list-group list-group-flush">
-            {% for project in profile.projects.all %}
-                <li class="list-group-item small">
-                    <div class="fw-semibold">{{ project.title }}</div>
-                    <div class="text-muted">
-                        {{ project.role }}
-                        {% if project.start_date %}· {{ project.start_date|date:"M Y" }} – {{ project.end_date|date:"M Y"|default:"present" }}{% endif %}
-                    </div>
-                    {% if project.description %}<div>{{ project.description }}</div>{% endif %}
-                    {% if project.activities %}<div class="text-muted" style="white-space: pre-line;">{{ project.activities }}</div>{% endif %}
-                </li>
-            {% empty %}
-                <li class="list-group-item small text-muted">No projects yet.</li>
-            {% endfor %}
-        </ul>
-    </div>
-
     <div class="row g-3 mb-3">
         <div class="col-md-6">
             <div class="card h-100">
                 <div class="card-header fw-semibold">Certifications</div>
                 <ul class="list-group list-group-flush small">
                     {% for item in certifications %}
-                        <li class="list-group-item">{{ item.title }}{% if item.issuer %} · {{ item.issuer }}{% endif %}{% if item.year %} ({{ item.year }}){% endif %}</li>
+                        <li class="list-group-item">
+                            {{ item.title }}
+                            {% if item.issuer %}
+                                · {{ item.issuer }}
+                            {% endif %}
+                            {% if item.year %}
+                                ({{ item.year }})
+                            {% endif %}
+                        </li>
                     {% empty %}
                         <li class="list-group-item text-muted">None yet.</li>
                     {% endfor %}
@@ -166,7 +150,15 @@
                 <div class="card-header fw-semibold">Awards</div>
                 <ul class="list-group list-group-flush small">
                     {% for item in awards %}
-                        <li class="list-group-item">{{ item.title }}{% if item.issuer %} · {{ item.issuer }}{% endif %}{% if item.year %} ({{ item.year }}){% endif %}</li>
+                        <li class="list-group-item">
+                            {{ item.title }}
+                            {% if item.issuer %}
+                                · {{ item.issuer }}
+                            {% endif %}
+                            {% if item.year %}
+                                ({{ item.year }})
+                            {% endif %}
+                        </li>
                     {% empty %}
                         <li class="list-group-item text-muted">None yet.</li>
                     {% endfor %}
@@ -177,7 +169,8 @@
 
     {% if profile.source_resume %}
         <p class="small text-muted">
-            Created from <a href="{% url 'resumes:detail' profile.source_resume.pk %}">{{ profile.source_resume.original_filename }}</a>.
+            Created from
+            <a href="{% url 'resumes:detail' profile.source_resume.pk %}">{{ profile.source_resume.original_filename }}</a>.
         </p>
     {% endif %}
 {% endif %}

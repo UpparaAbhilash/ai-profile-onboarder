@@ -11,6 +11,7 @@ from .forms import AchievementFormSet, ProfileForm, ProjectFormSet
 from .models import Achievement, JobSeekerProfile
 from .services.completeness import missing_required_fields
 from .services.profile_import import import_profile_from_resume
+from .services.scoring import calculate_score, update_profile_score
 from .services.status import StatusChangeError, candidate_choices, change_status, label
 
 
@@ -32,6 +33,7 @@ def my_profile(request):
             status_choices=candidate_choices(profile),
             missing_fields=missing_required_fields(profile),
             status_history=profile.status_history.select_related("changed_by")[:10],
+            score=calculate_score(profile),
         )
     return render(request, "profiles/detail.html", context)
 
@@ -67,9 +69,10 @@ def edit_profile(request):
         # A list (not "and") so ALL three are validated and all errors are shown at once.
         if all([form.is_valid(), projects.is_valid(), achievements.is_valid()]):
             with transaction.atomic():  # everything is saved, or nothing
-                form.save()
+                profile = form.save()
                 projects.save()
                 achievements.save()
+                update_profile_score(profile)
             messages.success(request, "Your profile was saved.")
             return redirect("profiles:me")
         messages.error(request, "Please correct the errors below.")

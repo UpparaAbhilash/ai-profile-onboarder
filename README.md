@@ -30,3 +30,4 @@ Bootstrap · Celery + Redis
 - [x] Phase 7A — Automatic accounts, set-password links, password reset, verified resume linking
 - [x] Phase 7B — Real email delivery via SMTP (Gmail App Password), configured only through .env
 - [x] Phase 8A — Profile status workflow (state machine, permissions, history, audit log)
+- [x] Phase 8B — Transparent 0–100 profile score with breakdown and improvement tips

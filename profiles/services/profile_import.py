@@ -10,6 +10,7 @@ from datetime import date
 from django.db import transaction
 
 from ..models import Achievement, JobSeekerProfile, Project, Skill, StatusHistory
+from .scoring import update_profile_score
 
 logger = logging.getLogger(__name__)
 
@@ -123,6 +124,9 @@ def import_profile_from_resume(resume, user):
             changed_by=user,
             note="Profile created from resume.",
         )
+
+    # 5. Recalculate the profile score (Phase 8B).
+    update_profile_score(profile)
 
     logger.info(
         "Profile id=%s %s from resume id=%s.",
