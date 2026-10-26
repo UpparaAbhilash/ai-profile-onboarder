@@ -5,6 +5,7 @@ All secrets and environment-specific values are read from environment
 variables, loaded from the .env file in the project root.
 """
 import os
+import sys
 from pathlib import Path
 
 from django.core.exceptions import ImproperlyConfigured
@@ -173,4 +174,8 @@ OPENAI_MODEL = os.getenv("OPENAI_MODEL", "")
 OPENAI_TIMEOUT_SECONDS = int(os.getenv("OPENAI_TIMEOUT_SECONDS", "60"))
 # Maximum characters of resume text sent to the AI (limits cost).
 RESUME_MAX_AI_INPUT_CHARS = 20_000
+
+# Safety: automated tests must NEVER call the real (paid) AI service.
+if len(sys.argv) > 1 and sys.argv[1] == "test":
+    OPENAI_API_KEY = ""
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"

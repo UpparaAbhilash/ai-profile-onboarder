@@ -8,6 +8,7 @@
     <a class="btn btn-outline-primary btn-sm" href="{% url 'resumes:upload' %}">Upload another</a>
 </div>
 
+<!-- File information -->
 <div class="card shadow-sm mb-4">
     <div class="card-body">
         <dl class="row mb-0">
@@ -16,8 +17,10 @@
 
             <dt class="col-sm-3">Status</dt>
             <dd class="col-sm-9">
-                {% if resume.status == "extracted" %}
+                {% if resume.status == "parsed" %}
                     <span class="badge text-bg-success">{{ resume.get_status_display }}</span>
+                {% elif resume.status == "extracted" %}
+                    <span class="badge text-bg-info">{{ resume.get_status_display }}</span>
                 {% elif resume.status == "failed" %}
                     <span class="badge text-bg-danger">{{ resume.get_status_display }}</span>
                 {% else %}
@@ -25,14 +28,16 @@
                 {% endif %}
             </dd>
 
-            <dt class="col-sm-3">Size</dt>
-            <dd class="col-sm-9">{{ resume.file_size|filesizeformat }}</dd>
-
-            <dt class="col-sm-3">Pages</dt>
-            <dd class="col-sm-9">{{ resume.page_count|default:"–" }}</dd>
+            <dt class="col-sm-3">Size / pages</dt>
+            <dd class="col-sm-9">{{ resume.file_size|filesizeformat }} · {{ resume.page_count|default:"–" }} page(s)</dd>
 
             <dt class="col-sm-3">Uploaded</dt>
             <dd class="col-sm-9">{{ resume.created_at|date:"d M Y, H:i" }}</dd>
+
+            {% if resume.ai_model %}
+                <dt class="col-sm-3">Analysed</dt>
+                <dd class="col-sm-9">{{ resume.parsed_at|date:"d M Y, H:i" }} · {{ resume.ai_model }}</dd>
+            {% endif %}
         </dl>
     </div>
     <div class="card-footer bg-transparent">
@@ -42,14 +47,136 @@
 
 {% if resume.status == "failed" %}
     <div class="alert alert-danger">{{ resume.error_message }}</div>
+{% elif resume.error_message %}
+    <div class="alert alert-warning">{{ resume.error_message }}</div>
+{% endif %}
+
+{% if fields %}
+    <!-- AI result -->
+    <h2 class="h5 mb-1">Extracted details</h2>
+    <p class="small text-muted">
+        Created by AI from your resume. Anything not found in your resume is left empty.
+        You will be able to correct these details in your profile.
+    </p>
+
+    <div class="row g-3 mb-3">
+        <div class="col-lg-6">
+            <div class="card h-100">
+                <div class="card-header fw-semibold">Personal</div>
+                <div class="card-body">
+                    <dl class="row mb-0 small">
+                        <dt class="col-5">Name</dt><dd class="col-7">{{ full_name|default:"–" }}</dd>
+                        <dt class="col-5">Email</dt><dd class="col-7">{{ fields.email|default:"–" }}</dd>
+                        <dt class="col-5">Phone</dt><dd class="col-7">{{ fields.phone|default:"–" }}</dd>
+                        <dt class="col-5">Date of birth</dt><dd class="col-7">{{ fields.date_of_birth|default:"–" }}</dd>
+                        <dt class="col-5">Aadhaar</dt>
+                        <dd class="col-7">{% if fields.aadhaar_last4 %}XXXX-XXXX-{{ fields.aadhaar_last4 }}{% else %}–{% endif %}</dd>
+                        <dt class="col-5">Current city</dt><dd class="col-7">{{ fields.current_city|default:"–" }}</dd>
+                    </dl>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-6">
+            <div class="card h-100">
+                <div class="card-header fw-semibold">Professional</div>
+                <div class="card-body">
+                    <dl class="row mb-0 small">
+                        <dt class="col-5">Role</dt><dd class="col-7">{{ fields.professional_role|default:"–" }}</dd>
+                        <dt class="col-5">Experience type</dt><dd class="col-7">{{ fields.experience_type|default:"–"|capfirst }}</dd>
+                        <dt class="col-5">Total experience</dt>
+                        <dd class="col-7">{% if experience_years is not None %}{{ experience_years }} years{% else %}–{% endif %}</dd>
+                        <dt class="col-5">Current company</dt><dd class="col-7">{{ fields.current_company|default:"–" }}</dd>
+                        <dt class="col-5">Preferred roles</dt><dd class="col-7">{{ fields.preferred_roles|join:", "|default:"–" }}</dd>
+                        <dt class="col-5">Preferred locations</dt><dd class="col-7">{{ fields.preferred_locations|join:", "|default:"–" }}</dd>
+                    </dl>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card mb-3">
+        <div class="card-header fw-semibold">Skills</div>
+        <div class="card-body">
+            {% for skill in fields.skills %}
+                <span class="badge rounded-pill text-bg-primary me-1 mb-1">{{ skill }}</span>
+            {% empty %}
+                <span class="text-muted small">No skills found.</span>
+            {% endfor %}
+        </div>
+    </div>
+
+    {% if fields.experience_summary %}
+        <div class="card mb-3">
+            <div class="card-header fw-semibold">Summary</div>
+            <div class="card-body small">{{ fields.experience_summary }}</div>
+        </div>
+    {% endif %}
+
+    <div class="card mb-3">
+        <div class="card-header fw-semibold">Projects</div>
+        <ul class="list-group list-group-flush">
+            {% for project in fields.projects %}
+                <li class="list-group-item small">
+                    <div class="fw-semibold">{{ project.title }}</div>
+                    <div class="text-muted">
+                        {{ project.role|default:"" }}
+                        {% if project.start_month or project.end_month or project.is_ongoing %}
+                            · {{ project.start_month|default:"?" }} –
+                            {% if project.is_ongoing %}present{% else %}{{ project.end_month|default:"?" }}{% endif %}
+                        {% endif %}
+                    </div>
+                    {% if project.description %}<div>{{ project.description }}</div>{% endif %}
+                    {% if project.activities %}
+                        <ul class="mb-0">{% for activity in project.activities %}<li>{{ activity }}</li>{% endfor %}</ul>
+                    {% endif %}
+                </li>
+            {% empty %}
+                <li class="list-group-item small text-muted">No projects found.</li>
+            {% endfor %}
+        </ul>
+    </div>
+
+    <div class="row g-3 mb-3">
+        <div class="col-md-6">
+            <div class="card h-100">
+                <div class="card-header fw-semibold">Certifications</div>
+                <ul class="list-group list-group-flush small">
+                    {% for item in fields.certifications %}
+                        <li class="list-group-item">{{ item.title }}{% if item.issuer %} · {{ item.issuer }}{% endif %}{% if item.year %} ({{ item.year }}){% endif %}</li>
+                    {% empty %}
+                        <li class="list-group-item text-muted">None found.</li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card h-100">
+                <div class="card-header fw-semibold">Awards</div>
+                <ul class="list-group list-group-flush small">
+                    {% for item in fields.awards %}
+                        <li class="list-group-item">{{ item.title }}{% if item.issuer %} · {{ item.issuer }}{% endif %}{% if item.year %} ({{ item.year }}){% endif %}</li>
+                    {% empty %}
+                        <li class="list-group-item text-muted">None found.</li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    {% if ai_warnings %}
+        <details class="mb-4">
+            <summary class="small text-muted">{{ ai_warnings|length }} value(s) removed during verification</summary>
+            <ul class="small text-muted mt-2">
+                {% for warning in ai_warnings %}<li>{{ warning }}</li>{% endfor %}
+            </ul>
+        </details>
+    {% endif %}
 {% endif %}
 
 {% if preview %}
-    <h2 class="h5">Extracted text (preview)</h2>
-    <p class="small text-muted">
-        This is what the AI parser will read in the next step.
-        {% if preview_truncated %}Showing the first part only.{% endif %}
-    </p>
-    <pre class="border rounded p-3 bg-body-tertiary small" style="max-height: 24rem; overflow-y: auto; white-space: pre-wrap;">{{ preview }}</pre>
+    <details {% if not fields %}open{% endif %} class="mb-4">
+        <summary class="h6">Extracted text {% if preview_truncated %}(first part){% endif %}</summary>
+        <pre class="border rounded p-3 bg-body-tertiary small mt-2" style="max-height: 24rem; overflow-y: auto; white-space: pre-wrap;">{{ preview }}</pre>
+    </details>
 {% endif %}
 {% endblock %}

@@ -24,3 +24,4 @@ Bootstrap · Celery + Redis
 - [x] Phase 4A — PDF validation and text extraction services
 - [x] Phase 4B — Resume upload page, protected download, access control
 - [x] Phase 5A — AI parser service: Pydantic schema, Aadhaar redaction, source verification, tests
+- [x] Phase 5B — AI parsing in the upload flow, results page, reparse command
