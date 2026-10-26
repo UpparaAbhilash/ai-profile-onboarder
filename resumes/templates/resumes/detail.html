@@ -40,8 +40,14 @@
             {% endif %}
         </dl>
     </div>
-    <div class="card-footer bg-transparent">
+    <div class="card-footer bg-transparent d-flex flex-wrap gap-2">
         <a class="btn btn-secondary btn-sm" href="{% url 'resumes:download' resume.pk %}">Download PDF</a>
+        {% if fields and user.is_authenticated and resume.owner_id == user.pk %}
+            <form method="post" action="{% url 'profiles:import_from_resume' resume.pk %}">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-primary btn-sm">Fill my profile from this resume</button>
+            </form>
+        {% endif %}
     </div>
 </div>
 

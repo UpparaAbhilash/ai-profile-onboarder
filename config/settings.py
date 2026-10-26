@@ -125,6 +125,11 @@ DATABASES = {
 # BEFORE the first migration.
 AUTH_USER_MODEL = "accounts.User"
 
+# Where @login_required sends anonymous users, and where to go after login/logout.
+LOGIN_URL = "accounts:login"
+LOGIN_REDIRECT_URL = "profiles:me"
+LOGOUT_REDIRECT_URL = "home"
+
 AUTH_PASSWORD_VALIDATORS = [
     {"NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator"},
     {
@@ -174,8 +179,14 @@ OPENAI_MODEL = os.getenv("OPENAI_MODEL", "")
 OPENAI_TIMEOUT_SECONDS = int(os.getenv("OPENAI_TIMEOUT_SECONDS", "60"))
 # Maximum characters of resume text sent to the AI (limits cost).
 RESUME_MAX_AI_INPUT_CHARS = 20_000
-
 # Safety: automated tests must NEVER call the real (paid) AI service.
 if len(sys.argv) > 1 and sys.argv[1] == "test":
     OPENAI_API_KEY = ""
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+# --------------------------------------------------------------------------
+# Messages: map Django's "error" level to Bootstrap's "danger" CSS class
+# --------------------------------------------------------------------------
+from django.contrib.messages import constants as message_constants  # noqa: E402
+
+MESSAGE_TAGS = {message_constants.ERROR: "danger"}

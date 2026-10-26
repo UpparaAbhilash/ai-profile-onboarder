@@ -5,6 +5,7 @@ from django.utils import timezone
 
 from ..models import Resume
 from .ai_parser import ResumeParsingError, parse_resume_text
+from profiles.services.profile_import import import_profile_from_resume
 
 logger = logging.getLogger(__name__)
 
@@ -16,6 +17,7 @@ def parse_and_store(resume: Resume, client=None) -> Resume:
 
     - Scanned/failed resumes are skipped (nothing is sent to the AI).
     - On AI errors the status is NOT changed, so the resume can be re-parsed later.
+    - Logged-in uploads get their profile filled straight away.
     """
     if resume.status not in PARSEABLE_STATUSES or not resume.extracted_text:
         logger.info("Resume id=%s not sent to AI (status=%s).", resume.pk, resume.status)
@@ -43,4 +45,12 @@ def parse_and_store(resume: Resume, client=None) -> Resume:
     logger.info(
         "Resume id=%s parsed with %s (%d warnings).", resume.pk, result.model, len(result.warnings)
     )
+
+    # Logged-in uploads get their profile filled straight away.
+    # (Anonymous uploads are linked to an account in Phase 7.)
+    if resume.owner_id:
+        try:
+            import_profile_from_resume(resume, resume.owner)
+        except Exception:
+            logger.exception("Profile import failed for resume id=%s.", resume.pk)
     return resume
