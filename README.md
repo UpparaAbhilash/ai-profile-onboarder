@@ -15,4 +15,7 @@ Bootstrap · Celery + Redis
     copy .env.example .env   # then fill in values
 
 ## Progress
+## Progress
+- [x] Phase 1 — Environment setup
+- [x] Phase 2 — Django project, apps, custom User model
 - [x] Phase 3A — MySQL database connected
