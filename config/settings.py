@@ -156,4 +156,11 @@ STATIC_ROOT = BASE_DIR / "staticfiles"    # where collectstatic gathers files fo
 MEDIA_URL = "media/"
 MEDIA_ROOT = BASE_DIR / "media"
 
+# --------------------------------------------------------------------------
+# Resume upload limits
+# --------------------------------------------------------------------------
+RESUME_MAX_UPLOAD_MB = int(os.getenv("RESUME_MAX_UPLOAD_MB", "5"))
+RESUME_MAX_PAGES = int(os.getenv("RESUME_MAX_PAGES", "10"))
+# Fewer visible characters than this per page => treat the PDF as scanned.
+RESUME_MIN_TEXT_CHARS_PER_PAGE = 50
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
