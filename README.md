@@ -28,3 +28,4 @@ Bootstrap · Celery + Redis
 - [x] Phase 6A — Profile import from parsed resume, candidate login, My profile page
 - [x] Phase 6B — Edit profile with validation, projects/certifications formsets, ownership tests
 - [x] Phase 7A — Automatic accounts, set-password links, password reset, verified resume linking
+- [x] Phase 7B — Real email delivery via SMTP (Gmail App Password), configured only through .env
