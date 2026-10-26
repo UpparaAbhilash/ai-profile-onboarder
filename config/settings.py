@@ -190,3 +190,23 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 from django.contrib.messages import constants as message_constants  # noqa: E402
 
 MESSAGE_TAGS = {message_constants.ERROR: "danger"}
+
+# --------------------------------------------------------------------------
+# Email
+# Development default: emails are printed in the runserver terminal.
+# Part B switches to real SMTP through .env (no code change).
+# --------------------------------------------------------------------------
+EMAIL_BACKEND = os.getenv("EMAIL_BACKEND") or "django.core.mail.backends.console.EmailBackend"
+EMAIL_HOST = os.getenv("EMAIL_HOST", "")
+EMAIL_PORT = int(os.getenv("EMAIL_PORT") or "587")
+EMAIL_HOST_USER = os.getenv("EMAIL_HOST_USER", "")
+EMAIL_HOST_PASSWORD = os.getenv("EMAIL_HOST_PASSWORD", "")
+EMAIL_USE_TLS = env_bool("EMAIL_USE_TLS", default=True)
+EMAIL_TIMEOUT = 20  # seconds; never let a slow mail server hang a request forever
+DEFAULT_FROM_EMAIL = os.getenv("DEFAULT_FROM_EMAIL") or "Profile Onboarder <noreply@localhost>"
+
+# Used to build absolute links in emails (works later in background tasks too).
+SITE_URL = os.getenv("SITE_URL") or "http://127.0.0.1:8000"
+
+# How long set-password and reset links stay valid.
+PASSWORD_RESET_TIMEOUT = int(os.getenv("PASSWORD_RESET_TIMEOUT_HOURS") or "48") * 3600

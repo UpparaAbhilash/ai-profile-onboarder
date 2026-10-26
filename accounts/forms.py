@@ -1,5 +1,5 @@
-"""Admin forms for the custom User model."""
-from django.contrib.auth.forms import AdminUserCreationForm, UserChangeForm
+"""Forms for the custom User model and password reset."""
+from django.contrib.auth.forms import AdminUserCreationForm, PasswordResetForm, UserChangeForm
 
 from .models import User
 
@@ -18,3 +18,15 @@ class CustomUserChangeForm(UserChangeForm):
     class Meta(UserChangeForm.Meta):
         model = User
         fields = ("email", "first_name", "last_name")
+
+
+class EmailPasswordResetForm(PasswordResetForm):
+    """Password reset that also works for accounts created from a resume.
+
+    Django's default form skips users with an unusable password. Our onboarded
+    users have exactly that until they click their first link, so if that email
+    gets lost they must still be able to request a new link.
+    """
+
+    def get_users(self, email):
+        return User._default_manager.filter(email__iexact=email, is_active=True)

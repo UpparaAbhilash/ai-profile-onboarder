@@ -1,0 +1,15 @@
+{% autoescape off %}Hello{% if user.first_name %} {{ user.first_name }}{% endif %},
+
+We created a Profile Onboarder account for {{ user.email }} from the resume you uploaded.
+
+To activate it, set your password here:
+{{ set_password_url }}
+
+This link works only once and expires in {{ valid_hours }} hours.
+After you set your password, your profile will be filled from your resume.
+
+If you did not upload a resume, you can ignore this email.
+The account cannot be used without this link.
+
+Profile Onboarder
+{% endautoescape %}

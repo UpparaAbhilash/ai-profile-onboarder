@@ -6,6 +6,8 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.cache import never_cache
 from django.views.decorators.http import require_GET, require_http_methods
 
+from accounts.services.onboarding import onboard_from_resume
+
 from .forms import ResumeUploadForm
 from .models import Resume
 from .permissions import can_access_resume, find_duplicate_upload, remember_upload
@@ -13,6 +15,24 @@ from .services.resume_intake import create_resume
 from .services.resume_parsing import parse_and_store
 
 PREVIEW_CHARS = 1500
+
+
+def notify_about_account(request, resume: Resume) -> None:
+    """Create an account for anonymous uploads. The message is the same for new and
+    existing emails, so this page never reveals who already has an account."""
+    outcome = onboard_from_resume(resume)
+    if outcome == "no_email":
+        messages.warning(
+            request,
+            "We could not find a valid email address in your resume, so no account was created. "
+            "Please check the email in your resume and upload it again.",
+        )
+    elif outcome in ("created", "exists"):
+        messages.info(
+            request,
+            "Check your inbox: if this email address is new to us, we sent you a link to set your "
+            "password. Already have an account? Log in, and this resume will be linked to it.",
+        )
 
 
 @require_http_methods(["GET", "POST"])
@@ -40,6 +60,8 @@ def upload_resume(request):
 
             if resume.status == Resume.Status.PARSED:
                 messages.success(request, "Your resume was analysed. Please check the extracted details.")
+                if not request.user.is_authenticated:
+                    notify_about_account(request, resume)
             elif resume.status == Resume.Status.FAILED:
                 messages.warning(request, resume.error_message)
             else:
