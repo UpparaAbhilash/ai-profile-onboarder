@@ -91,6 +91,9 @@ class JobSeekerProfile(models.Model):
         constraints = [
             models.CheckConstraint(condition=Q(score__lte=100), name="profile_score_max_100"),
         ]
+        permissions = [
+            ("review_profile", "Can review candidate profiles"),
+        ]
 
     @property
     def full_name(self) -> str:

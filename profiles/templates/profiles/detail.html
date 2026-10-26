@@ -15,9 +15,67 @@
             <h1 class="h3 mb-1">{{ profile.full_name|default:user.email }}</h1>
             <span class="text-muted">{{ profile.professional_role|default:"No role yet" }}</span>
         </div>
-        <div class="d-flex align-items-center gap-2">
-            <span class="badge text-bg-secondary">{{ profile.get_status_display }}</span>
-            <a class="btn btn-primary btn-sm" href="{% url 'profiles:edit' %}">Edit profile</a>
+        <a class="btn btn-primary btn-sm" href="{% url 'profiles:edit' %}">Edit profile</a>
+    </div>
+
+    <!-- Availability / status -->
+    <div class="card shadow-sm mb-3">
+        <div class="card-header fw-semibold d-flex justify-content-between align-items-center">
+            <span>Your availability</span>
+            {% if profile.status == "open_to_work" %}
+                <span class="badge text-bg-success">{{ profile.get_status_display }}</span>
+            {% elif profile.status == "reviewed" %}
+                <span class="badge text-bg-info">{{ profile.get_status_display }}</span>
+            {% elif profile.status == "not_interested" %}
+                <span class="badge text-bg-dark">{{ profile.get_status_display }}</span>
+            {% else %}
+                <span class="badge text-bg-secondary">{{ profile.get_status_display }}</span>
+            {% endif %}
+        </div>
+        <div class="card-body">
+            {% if status_choices %}
+                <p class="small text-muted mb-2">Tell recruiters whether you are looking for a job right now.</p>
+                <div class="d-flex flex-wrap gap-2 mb-2">
+                    {% for value, label in status_choices %}
+                        <form method="post" action="{% url 'profiles:change_status' %}">
+                            {% csrf_token %}
+                            <input type="hidden" name="status" value="{{ value }}">
+                            {% if value == "open_to_work" %}
+                                <button type="submit" class="btn btn-success btn-sm" {% if missing_fields %}disabled{% endif %}>
+                                    I'm open to work
+                                </button>
+                            {% else %}
+                                <button type="submit" class="btn btn-outline-secondary btn-sm">{{ label }}</button>
+                            {% endif %}
+                        </form>
+                    {% endfor %}
+                </div>
+            {% endif %}
+
+            {% if missing_fields %}
+                <div class="alert alert-warning small mb-0">
+                    To mark yourself as <strong>Open to Work</strong>, please add:
+                    <ul class="mb-1">{% for item in missing_fields %}<li>{{ item }}</li>{% endfor %}</ul>
+                    <a href="{% url 'profiles:edit' %}">Complete your profile</a>
+                </div>
+            {% endif %}
+
+            {% if status_history %}
+                <details class="mt-3">
+                    <summary class="small text-muted">Status history</summary>
+                    <ul class="small text-muted mt-2 mb-0">
+                        {% for entry in status_history %}
+                            <li>
+                                {{ entry.created_at|date:"d M Y, H:i" }}:
+                                {% if entry.from_status %}{{ entry.get_from_status_display }} → {% endif %}{{ entry.get_to_status_display }}
+                                {% if entry.changed_by %}
+                                    ({% if entry.changed_by_id == user.pk %}you{% else %}reviewer{% endif %})
+                                {% endif %}
+                            </li>
+                        {% endfor %}
+                    </ul>
+                </details>
+            {% endif %}
         </div>
     </div>
 

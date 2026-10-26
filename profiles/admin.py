@@ -1,6 +1,7 @@
 from django.contrib import admin
 
 from .models import Achievement, JobSeekerProfile, Project, Skill, StatusHistory
+from .services.status import REVIEW_PERMISSION, StatusChangeError, change_status
 
 
 class ProjectInline(admin.StackedInline):
@@ -33,8 +34,34 @@ class JobSeekerProfileAdmin(admin.ModelAdmin):
         "user__email", "first_name", "last_name", "professional_role", "skills__name",
     )
     filter_horizontal = ("skills",)
-    readonly_fields = ("score", "score_breakdown", "score_updated_at", "created_at", "updated_at")
+    # status is read-only: changes must go through the workflow (history + audit log).
+    readonly_fields = (
+        "status", "score", "score_breakdown", "score_updated_at", "created_at", "updated_at",
+    )
     inlines = [ProjectInline, AchievementInline, StatusHistoryInline]
+    actions = ["mark_reviewed"]
+
+    @admin.action(description="Mark selected profiles as reviewed", permissions=["review"])
+    def mark_reviewed(self, request, queryset):
+        done = failed = 0
+        for profile in queryset:
+            try:
+                change_status(profile, JobSeekerProfile.Status.REVIEWED, request.user,
+                              note="Reviewed in the admin.")
+            except StatusChangeError:
+                failed += 1
+            else:
+                done += 1
+        self.message_user(request, f"{done} profile(s) marked as reviewed.")
+        if failed:
+            self.message_user(
+                request,
+                f"{failed} profile(s) skipped: only profiles with status 'Created' can be reviewed.",
+                level="warning",
+            )
+
+    def has_review_permission(self, request):
+        return request.user.has_perm(REVIEW_PERMISSION)
 
 
 @admin.register(Skill)

@@ -9,7 +9,9 @@ from resumes.models import Resume
 
 from .forms import AchievementFormSet, ProfileForm, ProjectFormSet
 from .models import Achievement, JobSeekerProfile
+from .services.completeness import missing_required_fields
 from .services.profile_import import import_profile_from_resume
+from .services.status import StatusChangeError, candidate_choices, change_status, label
 
 
 @login_required
@@ -27,8 +29,25 @@ def my_profile(request):
         context.update(
             certifications=[a for a in achievements if a.kind == Achievement.Kind.CERTIFICATION],
             awards=[a for a in achievements if a.kind == Achievement.Kind.AWARD],
+            status_choices=candidate_choices(profile),
+            missing_fields=missing_required_fields(profile),
+            status_history=profile.status_history.select_related("changed_by")[:10],
         )
     return render(request, "profiles/detail.html", context)
+
+
+@login_required
+@require_POST
+def change_my_status(request):
+    profile = get_object_or_404(JobSeekerProfile, user=request.user)
+    new_status = request.POST.get("status", "")
+    try:
+        change_status(profile, new_status, request.user, note="Changed by the candidate.")
+    except StatusChangeError as exc:
+        messages.error(request, str(exc))
+    else:
+        messages.success(request, f"Your status is now '{label(new_status)}'.")
+    return redirect("profiles:me")
 
 
 @login_required
