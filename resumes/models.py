@@ -20,6 +20,7 @@ class Resume(models.Model):
     class Status(models.TextChoices):
         UPLOADED = "uploaded", "Uploaded"
         PROCESSING = "processing", "Processing"
+        EXTRACTED = "extracted", "Text extracted"
         PARSED = "parsed", "Parsed"
         FAILED = "failed", "Failed"
 

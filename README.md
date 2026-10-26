@@ -22,3 +22,4 @@ Bootstrap · Celery + Redis
 - [x] Phase 3A — MySQL database connected
 - [x] Phase 3B — Core data models (resumes, profiles, jobs, applications, audit log)
 - [x] Phase 4A — PDF validation and text extraction services
+- [x] Phase 4B — Resume upload page, protected download, access control
