@@ -26,3 +26,4 @@ Bootstrap · Celery + Redis
 - [x] Phase 5A — AI parser service: Pydantic schema, Aadhaar redaction, source verification, tests
 - [x] Phase 5B — AI parsing in the upload flow, results page, reparse command
 - [x] Phase 6A — Profile import from parsed resume, candidate login, My profile page
+- [x] Phase 6B — Edit profile with validation, projects/certifications formsets, ownership tests

@@ -1,0 +1,105 @@
+{% extends "base.html" %}
+
+{% block title %}Edit profile · Profile Onboarder{% endblock %}
+
+{% block content %}
+<div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
+    <h1 class="h3 mb-0">Edit your profile</h1>
+    <a class="btn btn-outline-secondary btn-sm" href="{% url 'profiles:me' %}">Cancel</a>
+</div>
+
+<form method="post" novalidate>
+    {% csrf_token %}
+
+    <!-- Main profile fields -->
+    <div class="card shadow-sm mb-4">
+        <div class="card-header fw-semibold">Personal and professional details</div>
+        <div class="card-body">
+            {% for error in form.non_field_errors %}<div class="alert alert-danger">{{ error }}</div>{% endfor %}
+            <div class="row g-3">
+                {% for field in form.visible_fields %}
+                    <div class="{% if field.field.widget.attrs.rows %}col-12{% else %}col-md-6{% endif %}">
+                        <label for="{{ field.id_for_label }}" class="form-label">{{ field.label }}</label>
+                        {{ field }}
+                        {% if field.help_text %}<div class="form-text">{{ field.help_text }}</div>{% endif %}
+                        {% for error in field.errors %}<div class="invalid-feedback d-block">{{ error }}</div>{% endfor %}
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Projects (inline formset) -->
+    <div class="card shadow-sm mb-4">
+        <div class="card-header fw-semibold">Projects</div>
+        <div class="card-body">
+            {{ projects.management_form }}
+            {% for error in projects.non_form_errors %}<div class="alert alert-danger">{{ error }}</div>{% endfor %}
+            {% for f in projects %}
+                <div class="border rounded p-3 mb-3">
+                    {% for hidden in f.hidden_fields %}{{ hidden }}{% endfor %}
+                    {% if not f.instance.pk %}<div class="small text-muted mb-2">Add a new project (leave empty to skip)</div>{% endif %}
+                    {% for error in f.non_field_errors %}<div class="alert alert-danger">{{ error }}</div>{% endfor %}
+                    <div class="row g-3">
+                        {% for field in f.visible_fields %}
+                            {% if field.name != "DELETE" %}
+                                <div class="{% if field.field.widget.attrs.rows %}col-12{% else %}col-md-6{% endif %}">
+                                    <label for="{{ field.id_for_label }}" class="form-label">{{ field.label }}</label>
+                                    {{ field }}
+                                    {% for error in field.errors %}<div class="invalid-feedback d-block">{{ error }}</div>{% endfor %}
+                                </div>
+                            {% endif %}
+                        {% endfor %}
+                    </div>
+                    {% if f.instance.pk %}
+                        <div class="form-check mt-2">
+                            {{ f.DELETE }}
+                            <label class="form-check-label text-danger" for="{{ f.DELETE.id_for_label }}">Delete this project</label>
+                        </div>
+                    {% endif %}
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Certifications and awards (inline formset) -->
+    <div class="card shadow-sm mb-4">
+        <div class="card-header fw-semibold">Certifications and awards</div>
+        <div class="card-body">
+            {{ achievements.management_form }}
+            {% for error in achievements.non_form_errors %}<div class="alert alert-danger">{{ error }}</div>{% endfor %}
+            {% for f in achievements %}
+                <div class="border rounded p-3 mb-3">
+                    {% for hidden in f.hidden_fields %}{{ hidden }}{% endfor %}
+                    {% if not f.instance.pk %}<div class="small text-muted mb-2">Add a new entry (leave empty to skip)</div>{% endif %}
+                    <div class="row g-3">
+                        {% for field in f.visible_fields %}
+                            {% if field.name != "DELETE" %}
+                                <div class="col-md-3">
+                                    <label for="{{ field.id_for_label }}" class="form-label">{{ field.label }}</label>
+                                    {{ field }}
+                                    {% for error in field.errors %}<div class="invalid-feedback d-block">{{ error }}</div>{% endfor %}
+                                </div>
+                            {% endif %}
+                        {% endfor %}
+                    </div>
+                    {% if f.instance.pk %}
+                        <div class="form-check mt-2">
+                            {{ f.DELETE }}
+                            <label class="form-check-label text-danger" for="{{ f.DELETE.id_for_label }}">Delete this entry</label>
+                        </div>
+                    {% endif %}
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <div class="d-flex gap-2 mb-4">
+        <button type="submit" class="btn btn-primary">Save profile</button>
+        <a class="btn btn-outline-secondary" href="{% url 'profiles:me' %}">Cancel</a>
+    </div>
+    <p class="small text-muted">
+        To add more than one new project or certification, save, then edit again. A new empty row appears each time.
+    </p>
+</form>
+{% endblock %}

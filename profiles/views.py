@@ -1,11 +1,13 @@
 """Candidate-facing profile pages."""
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
+from django.db import transaction
 from django.shortcuts import get_object_or_404, redirect, render
-from django.views.decorators.http import require_GET, require_POST
+from django.views.decorators.http import require_GET, require_http_methods, require_POST
 
 from resumes.models import Resume
 
+from .forms import AchievementFormSet, ProfileForm, ProjectFormSet
 from .models import Achievement, JobSeekerProfile
 from .services.profile_import import import_profile_from_resume
 
@@ -27,6 +29,41 @@ def my_profile(request):
             awards=[a for a in achievements if a.kind == Achievement.Kind.AWARD],
         )
     return render(request, "profiles/detail.html", context)
+
+
+@login_required
+@require_http_methods(["GET", "POST"])
+def edit_profile(request):
+    # Always the logged-in user's own profile: there is no ID in the URL to tamper with.
+    profile = JobSeekerProfile.objects.filter(user=request.user).first()
+    if profile is None:
+        messages.info(request, "Upload your resume first. We will create your profile from it.")
+        return redirect("resumes:upload")
+
+    if request.method == "POST":
+        form = ProfileForm(request.POST, instance=profile)
+        projects = ProjectFormSet(request.POST, instance=profile, prefix="projects")
+        achievements = AchievementFormSet(request.POST, instance=profile, prefix="achievements")
+
+        # A list (not "and") so ALL three are validated and all errors are shown at once.
+        if all([form.is_valid(), projects.is_valid(), achievements.is_valid()]):
+            with transaction.atomic():  # everything is saved, or nothing
+                form.save()
+                projects.save()
+                achievements.save()
+            messages.success(request, "Your profile was saved.")
+            return redirect("profiles:me")
+        messages.error(request, "Please correct the errors below.")
+    else:
+        form = ProfileForm(instance=profile)
+        projects = ProjectFormSet(instance=profile, prefix="projects")
+        achievements = AchievementFormSet(instance=profile, prefix="achievements")
+
+    return render(
+        request,
+        "profiles/edit.html",
+        {"form": form, "projects": projects, "achievements": achievements},
+    )
 
 
 @login_required
