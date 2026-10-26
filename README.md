@@ -16,6 +16,8 @@ Bootstrap · Celery + Redis
 
 ## Progress
 ## Progress
+## Progress
 - [x] Phase 1 — Environment setup
 - [x] Phase 2 — Django project, apps, custom User model
 - [x] Phase 3A — MySQL database connected
+- [x] Phase 3B — Core data models (resumes, profiles, jobs, applications, audit log)
