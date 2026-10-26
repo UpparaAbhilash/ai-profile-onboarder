@@ -163,4 +163,14 @@ RESUME_MAX_UPLOAD_MB = int(os.getenv("RESUME_MAX_UPLOAD_MB", "5"))
 RESUME_MAX_PAGES = int(os.getenv("RESUME_MAX_PAGES", "10"))
 # Fewer visible characters than this per page => treat the PDF as scanned.
 RESUME_MIN_TEXT_CHARS_PER_PAGE = 50
+
+# --------------------------------------------------------------------------
+# AI resume parsing (OpenAI)
+# --------------------------------------------------------------------------
+# Not required at startup, so tests and local work run without a key.
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "")
+OPENAI_MODEL = os.getenv("OPENAI_MODEL", "")
+OPENAI_TIMEOUT_SECONDS = int(os.getenv("OPENAI_TIMEOUT_SECONDS", "60"))
+# Maximum characters of resume text sent to the AI (limits cost).
+RESUME_MAX_AI_INPUT_CHARS = 20_000
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
