@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+
+{% block title %}My applications · Profile Onboarder{% endblock %}
+
+{% block content %}
+<div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
+    <h1 class="h3 mb-0">My applications</h1>
+    <a class="btn btn-outline-primary btn-sm" href="{% url 'jobs:list' %}">Browse jobs</a>
+</div>
+
+{% if applications %}
+    <div class="table-responsive">
+        <table class="table align-middle">
+            <thead>
+                <tr>
+                    <th>Job</th>
+                    <th>Company</th>
+                    <th>Applied</th>
+                    <th>Status</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for application in applications %}
+                    <tr>
+                        <td>
+                            {% if application.job.is_active %}
+                                <a href="{% url 'jobs:detail' application.job.pk %}">{{ application.job.title }}</a>
+                            {% else %}
+                                {{ application.job.title }}
+                                <span class="badge text-bg-light border">closed</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ application.job.company }}</td>
+                        <td>{{ application.applied_at|date:"d M Y" }}</td>
+                        <td>
+                            {% if application.status == "shortlisted" %}
+                                <span class="badge text-bg-success">{{ application.get_status_display }}</span>
+                            {% elif application.status == "under_review" %}
+                                <span class="badge text-bg-info">{{ application.get_status_display }}</span>
+                            {% elif application.status == "rejected" %}
+                                <span class="badge text-bg-danger">{{ application.get_status_display }}</span>
+                            {% elif application.status == "withdrawn" %}
+                                <span class="badge text-bg-light border">{{ application.get_status_display }}</span>
+                            {% else %}
+                                <span class="badge text-bg-secondary">{{ application.get_status_display }}</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-end">
+                            {% if application.status in withdrawable %}
+                                <form method="post" action="{% url 'jobs:withdraw' application.pk %}"
+                                      onsubmit="return confirm('Withdraw this application?');">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-outline-danger btn-sm">Withdraw</button>
+                                </form>
+                            {% endif %}
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+{% else %}
+    <div class="text-center py-5">
+        <p class="text-muted">You have not applied for any jobs yet.</p>
+        <a class="btn btn-primary" href="{% url 'jobs:list' %}">Browse jobs</a>
+    </div>
+{% endif %}
+{% endblock %}

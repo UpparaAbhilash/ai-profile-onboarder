@@ -22,11 +22,17 @@
             <div class="collapse navbar-collapse" id="mainNav">
                 <ul class="navbar-nav ms-auto align-items-lg-center">
                     <li class="nav-item">
+                        <a class="nav-link" href="{% url 'jobs:list' %}">Jobs</a>
+                    </li>
+                    <li class="nav-item">
                         <a class="nav-link" href="{% url 'resumes:upload' %}">Upload resume</a>
                     </li>
                     {% if user.is_authenticated %}
                         <li class="nav-item">
                             <a class="nav-link" href="{% url 'profiles:me' %}">My profile</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'jobs:my_applications' %}">My applications</a>
                         </li>
                         {% if user.is_staff %}
                             <li class="nav-item">
