@@ -1,0 +1,101 @@
+{% extends "base.html" %}
+
+{% block title %}Candidates · Dashboard{% endblock %}
+
+{% block content %}
+<h1 class="h3 mb-3">Candidates</h1>
+{% include "dashboard/_nav.html" with active="candidates" %}
+
+<div class="row g-4">
+    <div class="col-lg-3">
+        <form method="get" class="card card-body" novalidate>
+            {% for field in form %}
+                <div class="mb-2">
+                    <label for="{{ field.id_for_label }}" class="form-label small mb-1">{{ field.label }}</label>
+                    {{ field }}
+                    {% if field.help_text %}
+                        <div class="form-text">{{ field.help_text }}</div>
+                    {% endif %}
+                    {% for error in field.errors %}
+                        <div class="invalid-feedback d-block">{{ error }}</div>
+                    {% endfor %}
+                </div>
+            {% endfor %}
+            <div class="d-grid gap-2 mt-2">
+                <button type="submit" class="btn btn-primary">Apply filters</button>
+                <a class="btn btn-outline-secondary btn-sm" href="{% url 'dashboard:candidate_list' %}">Reset</a>
+            </div>
+        </form>
+    </div>
+
+    <div class="col-lg-9">
+        <p class="small text-muted">{{ page_obj.paginator.count }} candidate(s) found</p>
+        <div class="table-responsive">
+            <table class="table align-middle">
+                <thead>
+                    <tr>
+                        <th>Candidate</th>
+                        <th>City</th>
+                        <th>Experience</th>
+                        <th>Score</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for profile in page_obj %}
+                        <tr>
+                            <td>
+                                <a href="{% url 'dashboard:candidate_detail' profile.pk %}" class="fw-semibold">
+                                    {{ profile.full_name|default:profile.user.email }}
+                                </a>
+                                <div class="small text-muted">{{ profile.professional_role|default:"–" }}</div>
+                                <div>
+                                    {% for skill in profile.skills.all|slice:":5" %}
+                                        <span class="badge rounded-pill text-bg-light border">{{ skill.name }}</span>
+                                    {% endfor %}
+                                </div>
+                            </td>
+                            <td class="small">{{ profile.current_city|default:"–" }}</td>
+                            <td class="small">
+                                {% if profile.total_experience_years is not None %}
+                                    {{ profile.total_experience_years }} yrs
+                                {% else %}
+                                    {{ profile.get_experience_type_display|default:"–" }}
+                                {% endif %}
+                            </td>
+                            <td><span class="fw-semibold">{{ profile.score }}</span></td>
+                            <td>
+                                {% include "dashboard/_status_badge.html" with status=profile.status label=profile.get_status_display %}
+                            </td>
+                        </tr>
+                    {% empty %}
+                        <tr>
+                            <td colspan="5" class="text-center text-muted py-4">No candidates match these filters.</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        {% if page_obj.has_other_pages %}
+            <nav aria-label="Candidate pages">
+                <ul class="pagination">
+                    {% if page_obj.has_previous %}
+                        <li class="page-item">
+                            <a class="page-link" href="{% querystring page=page_obj.previous_page_number %}">Previous</a>
+                        </li>
+                    {% endif %}
+                    <li class="page-item disabled">
+                        <span class="page-link">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+                    </li>
+                    {% if page_obj.has_next %}
+                        <li class="page-item">
+                            <a class="page-link" href="{% querystring page=page_obj.next_page_number %}">Next</a>
+                        </li>
+                    {% endif %}
+                </ul>
+            </nav>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

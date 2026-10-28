@@ -1,0 +1,206 @@
+{% extends "base.html" %}
+
+{% block title %}{{ profile.full_name|default:"Candidate" }} · Dashboard{% endblock %}
+
+{% block content %}
+<p><a href="{% url 'dashboard:candidate_list' %}">&larr; All candidates</a></p>
+
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+    <div>
+        <h1 class="h3 mb-1">{{ profile.full_name|default:profile.user.email }}</h1>
+        <span class="text-muted">{{ profile.professional_role|default:"No role" }}</span>
+    </div>
+    <div class="d-flex align-items-center gap-2">
+        {% include "dashboard/_status_badge.html" with status=profile.status label=profile.get_status_display %}
+        <span class="badge text-bg-primary fs-6">Score {{ score.total }}</span>
+    </div>
+</div>
+
+<div class="row g-4">
+    <!-- Left: the candidate's data -->
+    <div class="col-lg-7">
+        <div class="card mb-3">
+            <div class="card-header fw-semibold">Contact and details</div>
+            <div class="card-body">
+                <dl class="row small mb-0">
+                    <dt class="col-5">Email</dt><dd class="col-7">{{ profile.user.email }}</dd>
+                    <dt class="col-5">Phone</dt><dd class="col-7">{{ profile.phone|default:"–" }}</dd>
+                    <dt class="col-5">Current city</dt><dd class="col-7">{{ profile.current_city|default:"–" }}</dd>
+                    <dt class="col-5">Date of birth</dt><dd class="col-7">{{ profile.date_of_birth|date:"d M Y"|default:"–" }}</dd>
+                    <dt class="col-5">Aadhaar</dt><dd class="col-7">{{ profile.aadhaar_masked|default:"–" }}</dd>
+                    <dt class="col-5">Experience</dt>
+                    <dd class="col-7">
+                        {{ profile.get_experience_type_display|default:"–" }}
+                        {% if profile.total_experience_years is not None %}
+                            · {{ profile.total_experience_years }} years
+                        {% endif %}
+                    </dd>
+                    <dt class="col-5">Current company</dt><dd class="col-7">{{ profile.current_company|default:"–" }}</dd>
+                    <dt class="col-5">Preferred roles</dt><dd class="col-7">{{ profile.preferred_roles|join:", "|default:"–" }}</dd>
+                    <dt class="col-5">Preferred locations</dt><dd class="col-7">{{ profile.preferred_locations|join:", "|default:"–" }}</dd>
+                </dl>
+            </div>
+        </div>
+
+        <div class="card mb-3">
+            <div class="card-header fw-semibold">Skills</div>
+            <div class="card-body">
+                {% for skill in profile.skills.all %}
+                    <span class="badge rounded-pill text-bg-primary me-1 mb-1">{{ skill.name }}</span>
+                {% empty %}
+                    <span class="small text-muted">No skills.</span>
+                {% endfor %}
+            </div>
+        </div>
+
+        {% if profile.experience_summary %}
+            <div class="card mb-3">
+                <div class="card-header fw-semibold">Summary</div>
+                <div class="card-body small">{{ profile.experience_summary }}</div>
+            </div>
+        {% endif %}
+
+        <div class="card mb-3">
+            <div class="card-header fw-semibold">Projects</div>
+            <ul class="list-group list-group-flush small">
+                {% for project in profile.projects.all %}
+                    <li class="list-group-item">
+                        <div class="fw-semibold">{{ project.title }}</div>
+                        <div class="text-muted">
+                            {{ project.role }}
+                            {% if project.start_date %}
+                                · {{ project.start_date|date:"M Y" }} – {{ project.end_date|date:"M Y"|default:"present" }}
+                            {% endif %}
+                        </div>
+                        {% if project.description %}
+                            <div>{{ project.description }}</div>
+                        {% endif %}
+                    </li>
+                {% empty %}
+                    <li class="list-group-item text-muted">No projects.</li>
+                {% endfor %}
+            </ul>
+        </div>
+
+        <div class="card mb-3">
+            <div class="card-header fw-semibold">Certifications and awards</div>
+            <ul class="list-group list-group-flush small">
+                {% for item in profile.achievements.all %}
+                    <li class="list-group-item">
+                        {{ item.get_kind_display }}: {{ item.title }}
+                        {% if item.issuer %}
+                            · {{ item.issuer }}
+                        {% endif %}
+                        {% if item.year %}
+                            ({{ item.year }})
+                        {% endif %}
+                    </li>
+                {% empty %}
+                    <li class="list-group-item text-muted">None.</li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+
+    <!-- Right: review tools -->
+    <div class="col-lg-5">
+        <div class="card mb-3">
+            <div class="card-header fw-semibold">Review</div>
+            <div class="card-body">
+                {% if can_review %}
+                    <form method="post" action="{% url 'dashboard:review_candidate' profile.pk %}">
+                        {% csrf_token %}
+                        <label for="review-note" class="form-label small">Note (optional)</label>
+                        <textarea id="review-note" name="note" rows="2" maxlength="255" class="form-control mb-2"></textarea>
+                        <button type="submit" class="btn btn-primary btn-sm">Mark as reviewed</button>
+                    </form>
+                {% else %}
+                    <p class="small text-muted mb-0">
+                        Only profiles with status "Created" can be marked as reviewed.
+                        The candidate decides about "Open to Work" and "Not Interested".
+                    </p>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="card mb-3">
+            <div class="card-header fw-semibold">Score breakdown</div>
+            <table class="table table-sm small mb-0">
+                <tbody>
+                    {% for item in score.breakdown.values %}
+                        <tr>
+                            <td>{{ item.label }}</td>
+                            <td class="text-end">{{ item.points }} / {{ item.max }}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <div class="card mb-3">
+            <div class="card-header fw-semibold">Applications</div>
+            <ul class="list-group list-group-flush small">
+                {% for application in applications %}
+                    <li class="list-group-item">
+                        <div class="d-flex justify-content-between">
+                            <span class="fw-semibold">{{ application.job.title }}</span>
+                            <span class="badge text-bg-secondary">{{ application.get_status_display }}</span>
+                        </div>
+                        <div class="text-muted">
+                            {{ application.job.company }} · applied {{ application.applied_at|date:"d M Y" }}
+                        </div>
+                        {% if application.cover_note %}
+                            <div class="fst-italic mt-1">"{{ application.cover_note|truncatechars:200 }}"</div>
+                        {% endif %}
+                        {% if application.next_steps %}
+                            <div class="d-flex flex-wrap gap-1 mt-2">
+                                {% for value, label in application.next_steps %}
+                                    <form method="post" action="{% url 'dashboard:application_status' application.pk %}">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="status" value="{{ value }}">
+                                        <button type="submit"
+                                                class="btn btn-sm {% if value == 'rejected' %}btn-outline-danger{% else %}btn-outline-primary{% endif %}">
+                                            {{ label }}
+                                        </button>
+                                    </form>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </li>
+                {% empty %}
+                    <li class="list-group-item text-muted">No applications.</li>
+                {% endfor %}
+            </ul>
+        </div>
+
+        <div class="card mb-3">
+            <div class="card-header fw-semibold">Resumes</div>
+            <ul class="list-group list-group-flush small">
+                {% for resume in resumes %}
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <span>{{ resume.original_filename }} · {{ resume.created_at|date:"d M Y" }}</span>
+                        <a class="btn btn-outline-secondary btn-sm" href="{% url 'resumes:download' resume.pk %}">Download</a>
+                    </li>
+                {% empty %}
+                    <li class="list-group-item text-muted">No resumes.</li>
+                {% endfor %}
+            </ul>
+        </div>
+
+        <div class="card mb-3">
+            <div class="card-header fw-semibold">Activity</div>
+            <ul class="list-group list-group-flush small">
+                {% for entry in activity %}
+                    <li class="list-group-item">
+                        {{ entry.created_at|date:"d M Y, H:i" }} ·
+                        {{ entry.actor.email|default:"system" }} ·
+                        <code>{{ entry.action }}</code>
+                    </li>
+                {% empty %}
+                    <li class="list-group-item text-muted">No activity yet.</li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+</div>
+{% endblock %}
