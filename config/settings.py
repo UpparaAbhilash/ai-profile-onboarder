@@ -210,3 +210,26 @@ SITE_URL = os.getenv("SITE_URL") or "http://127.0.0.1:8000"
 
 # How long set-password and reset links stay valid.
 PASSWORD_RESET_TIMEOUT = int(os.getenv("PASSWORD_RESET_TIMEOUT_HOURS") or "48") * 3600
+# ---------------------------------------------------------------------------
+# Celery: background tasks (Phase 11)
+# ---------------------------------------------------------------------------
+CELERY_BROKER_URL = os.getenv("CELERY_BROKER_URL") or "redis://localhost:6379/0"
+CELERY_RESULT_BACKEND = os.getenv("CELERY_RESULT_BACKEND") or "redis://localhost:6379/1"
+CELERY_RESULT_EXPIRES = 60 * 60 * 24          # delete stored results after 1 day
+CELERY_TASK_SERIALIZER = "json"
+CELERY_RESULT_SERIALIZER = "json"
+CELERY_ACCEPT_CONTENT = ["json"]              # never pickle: unsafe with untrusted messages
+CELERY_TIMEZONE = TIME_ZONE
+CELERY_TASK_ACKS_LATE = True                  # remove a message only after the task finished
+CELERY_WORKER_PREFETCH_MULTIPLIER = 1         # take one slow AI task at a time
+CELERY_TASK_SOFT_TIME_LIMIT = 120             # seconds; longer than OPENAI_TIMEOUT_SECONDS
+CELERY_TASK_TIME_LIMIT = 180
+CELERY_BROKER_CONNECTION_RETRY_ON_STARTUP = True
+CELERY_TASK_ALWAYS_EAGER = (
+    os.getenv("CELERY_TASK_ALWAYS_EAGER", "False").strip().lower() in {"1", "true", "yes"}
+)
+CELERY_TASK_EAGER_PROPAGATES = True           # in eager mode, errors are raised, not hidden
+
+# Tests never need Redis or a worker: tasks run immediately in the test process.
+if len(sys.argv) > 1 and sys.argv[1] == "test":
+    CELERY_TASK_ALWAYS_EAGER = True
