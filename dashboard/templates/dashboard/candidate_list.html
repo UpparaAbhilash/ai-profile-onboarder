@@ -29,7 +29,16 @@
     </div>
 
     <div class="col-lg-9">
-        <p class="small text-muted">{{ page_obj.paginator.count }} candidate(s) found</p>
+        <div class="d-flex justify-content-between align-items-center mb-2">
+            <span class="small text-muted">{{ page_obj.paginator.count }} candidate(s) found</span>
+            <a class="btn btn-outline-secondary btn-sm"
+               href="{% url 'dashboard:export_candidates' %}{% querystring page=None %}">
+                Export CSV
+            </a>
+        </div>
+        <p class="small text-muted">
+            The export contains no contact details, date of birth or Aadhaar. Every export is logged.
+        </p>
         <div class="table-responsive">
             <table class="table align-middle">
                 <thead>

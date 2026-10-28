@@ -5,4 +5,12 @@
     <li class="nav-item">
         <a class="nav-link {% if active == 'candidates' %}active{% endif %}" href="{% url 'dashboard:candidate_list' %}">Candidates</a>
     </li>
+    <li class="nav-item">
+        <a class="nav-link {% if active == 'jobs' %}active{% endif %}" href="{% url 'dashboard:job_pipeline' %}">Jobs</a>
+    </li>
+    {% if perms.dashboard.view_auditlog %}
+        <li class="nav-item">
+            <a class="nav-link {% if active == 'audit' %}active{% endif %}" href="{% url 'dashboard:audit_log' %}">Audit log</a>
+        </li>
+    {% endif %}
 </ul>

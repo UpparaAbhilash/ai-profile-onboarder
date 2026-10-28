@@ -1,8 +1,10 @@
-"""Filter form for the candidate search."""
+"""Filter forms for the reviewer dashboard."""
 from django import forms
 
 from profiles.forms import BootstrapFormMixin, split_comma_list
 from profiles.models import JobSeekerProfile
+
+from .models import AuditLog
 
 SORT_CHOICES = [
     ("score", "Highest score"),
@@ -55,3 +57,29 @@ class CandidateFilterForm(BootstrapFormMixin, forms.Form):
         if low is not None and high is not None and low > high:
             self.add_error("max_years", "Maximum years cannot be smaller than minimum years.")
         return cleaned
+    
+
+class AuditFilterForm(BootstrapFormMixin, forms.Form):
+    action = forms.ChoiceField(label="Action", required=False)
+    actor = forms.CharField(label="User email contains", required=False, max_length=254)
+    date_from = forms.DateField(
+        label="From", required=False, widget=forms.DateInput(attrs={"type": "date"})
+    )
+    date_to = forms.DateField(
+        label="To", required=False, widget=forms.DateInput(attrs={"type": "date"})
+    )
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # The dropdown offers only actions that actually exist in the log.
+        actions = AuditLog.objects.order_by("action").values_list("action", flat=True).distinct()
+        self.fields["action"].choices = [("", "All actions")] + [(a, a) for a in actions]
+        self.apply_bootstrap()
+
+    def clean(self):
+        cleaned = super().clean()
+        start, end = cleaned.get("date_from"), cleaned.get("date_to")
+        if start and end and start > end:
+            self.add_error("date_to", "The end date cannot be before the start date.")
+        return cleaned
+    

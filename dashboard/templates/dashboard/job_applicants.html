@@ -1,0 +1,86 @@
+{% extends "base.html" %}
+
+{% block title %}{{ job.title }} · Applicants{% endblock %}
+
+{% block content %}
+<p><a href="{% url 'dashboard:job_pipeline' %}">&larr; All jobs</a></p>
+<h1 class="h3 mb-1">{{ job.title }}</h1>
+<p class="text-muted">
+    {{ job.company }} · {{ job.location }} · Required skills:
+    {% for skill in job.required_skills.all %}
+        {{ skill.name }}{% if not forloop.last %},{% endif %}
+    {% empty %}
+        none listed
+    {% endfor %}
+</p>
+
+<ul class="nav nav-pills nav-sm mb-3">
+    <li class="nav-item">
+        <a class="nav-link {% if not status %}active{% endif %}" href="?">Active</a>
+    </li>
+    {% for value, label in status_choices %}
+        <li class="nav-item">
+            <a class="nav-link {% if status == value %}active{% endif %}" href="?status={{ value }}">{{ label }}</a>
+        </li>
+    {% endfor %}
+</ul>
+
+<div class="table-responsive">
+    <table class="table align-middle">
+        <thead>
+            <tr>
+                <th>Candidate</th>
+                <th>Skill match</th>
+                <th>Score</th>
+                <th>Applied</th>
+                <th>Status</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for application in applications %}
+                <tr>
+                    <td>
+                        <a class="fw-semibold" href="{% url 'dashboard:candidate_detail' application.candidate.pk %}">
+                            {{ application.candidate.full_name|default:application.candidate.user.email }}
+                        </a>
+                        <div class="small text-muted">{{ application.candidate.professional_role|default:"–" }}</div>
+                    </td>
+                    <td class="small">
+                        {% if application.match.percent is not None %}
+                            <span class="fw-semibold">{{ application.match.percent }}%</span>
+                            {% if application.match.missing %}
+                                <div class="text-muted">Missing: {{ application.match.missing|join:", " }}</div>
+                            {% endif %}
+                        {% else %}
+                            –
+                        {% endif %}
+                    </td>
+                    <td>{{ application.candidate.score }}</td>
+                    <td class="small">{{ application.applied_at|date:"d M Y" }}</td>
+                    <td><span class="badge text-bg-secondary">{{ application.get_status_display }}</span></td>
+                    <td>
+                        <div class="d-flex flex-wrap gap-1 justify-content-end">
+                            {% for value, label in application.next_steps %}
+                                <form method="post" action="{% url 'dashboard:application_status' application.pk %}">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="status" value="{{ value }}">
+                                    <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                                    <button type="submit"
+                                            class="btn btn-sm {% if value == 'rejected' %}btn-outline-danger{% else %}btn-outline-primary{% endif %}">
+                                        {{ label }}
+                                    </button>
+                                </form>
+                            {% endfor %}
+                        </div>
+                    </td>
+                </tr>
+            {% empty %}
+                <tr>
+                    <td colspan="6" class="text-center text-muted py-4">No applications in this view.</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

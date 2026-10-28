@@ -33,3 +33,4 @@ Bootstrap · Celery + Redis
 - [x] Phase 8B — Transparent 0–100 profile score with breakdown and improvement tips
 - [x] Phase 9 — Job listings with search, applications, withdraw/re-apply, reviewer workflow
 - [x] Phase 10A — Reviewer role, dashboard overview, candidate search/filters, review actions
+- [x] Phase 10B — Jobs pipeline sorted by skill match, audit log browser, safe CSV export
