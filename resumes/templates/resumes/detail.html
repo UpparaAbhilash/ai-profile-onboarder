@@ -2,6 +2,13 @@
 
 {% block title %}Resume · Profile Onboarder{% endblock %}
 
+{% block extra_head %}
+    {% if analysing %}
+        <!-- Reload the page every few seconds until the AI has finished. -->
+        <meta http-equiv="refresh" content="{{ refresh_seconds }}">
+    {% endif %}
+{% endblock %}
+
 {% block content %}
 <div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
     <h1 class="h3 mb-0">Your resume</h1>
@@ -19,6 +26,8 @@
             <dd class="col-sm-9">
                 {% if resume.status == "parsed" %}
                     <span class="badge text-bg-success">{{ resume.get_status_display }}</span>
+                {% elif analysing %}
+                    <span class="badge text-bg-warning">Analysing…</span>
                 {% elif resume.status == "extracted" %}
                     <span class="badge text-bg-info">{{ resume.get_status_display }}</span>
                 {% elif resume.status == "failed" %}
@@ -55,6 +64,34 @@
     <div class="alert alert-danger">{{ resume.error_message }}</div>
 {% elif resume.error_message %}
     <div class="alert alert-warning">{{ resume.error_message }}</div>
+{% endif %}
+
+{% if analysing %}
+    <div class="alert alert-info d-flex align-items-center gap-3">
+        <div class="spinner-border spinner-border-sm flex-shrink-0" role="status" aria-hidden="true"></div>
+        <div>
+            <strong>Analysing your resume…</strong>
+            This usually takes 10–30 seconds. This page updates by itself.
+        </div>
+    </div>
+{% elif analysis_slow %}
+    <div class="alert alert-warning">
+        The analysis is taking longer than usual. Please check this page again later.
+    </div>
+{% endif %}
+
+{% if account_notice %}
+    {% if fields.email %}
+        <div class="alert alert-info">
+            Check your inbox: if this email address is new to us, we sent you a link to set your
+            password. Already have an account? Log in, and this resume will be linked to it.
+        </div>
+    {% else %}
+        <div class="alert alert-warning">
+            We could not find a valid email address in your resume, so no account was created.
+            Please check the email in your resume and upload it again.
+        </div>
+    {% endif %}
 {% endif %}
 
 {% if fields %}

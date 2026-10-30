@@ -12,6 +12,7 @@ from django.urls import reverse
 
 from profiles.models import JobSeekerProfile
 from profiles.tests_import import make_parsed_resume, parsed_fields
+from resumes.models import Resume
 from resumes.tests import make_text_pdf, upload
 from resumes.tests_ai import fake_client, make_resume_data
 
@@ -146,9 +147,11 @@ class AnonymousUploadTests(TestCase):
     @patch("resumes.services.ai_parser.get_client")
     def test_anonymous_upload_creates_account_and_sends_email(self, mock_get_client):
         mock_get_client.return_value = fake_client(make_resume_data())
-        response = self.client.post(
-            reverse("resumes:upload"), {"file": upload(make_text_pdf())}, follow=True
-        )
+        # The account is created by the background task, which runs here on commit.
+        with self.captureOnCommitCallbacks(execute=True):
+            self.client.post(reverse("resumes:upload"), {"file": upload(make_text_pdf())})
+        resume = Resume.objects.get()
+        response = self.client.get(reverse("resumes:detail", args=[resume.pk]))
         self.assertContains(response, "Check your inbox")
         self.assertFalse(User.objects.get(email=EMAIL).has_usable_password())
         self.assertEqual(len(mail.outbox), 1)
@@ -158,6 +161,8 @@ class AnonymousUploadTests(TestCase):
         mock_get_client.return_value = fake_client(make_resume_data())
         owner = User.objects.create_user(email="owner@example.com", password=PASSWORD)
         self.client.force_login(owner)
-        self.client.post(reverse("resumes:upload"), {"file": upload(make_text_pdf())})
+        with self.captureOnCommitCallbacks(execute=True):
+            self.client.post(reverse("resumes:upload"), {"file": upload(make_text_pdf())})
+        self.assertEqual(Resume.objects.get().status, Resume.Status.PARSED)
         self.assertFalse(User.objects.filter(email=EMAIL).exists())
         self.assertEqual(len(mail.outbox), 0)

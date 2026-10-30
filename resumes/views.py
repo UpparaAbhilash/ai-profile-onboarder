@@ -1,38 +1,23 @@
 """Resume upload, result page and protected download."""
+from datetime import timedelta
+
 from django.conf import settings
 from django.contrib import messages
 from django.http import FileResponse, Http404
 from django.shortcuts import get_object_or_404, redirect, render
+from django.utils import timezone
 from django.views.decorators.cache import never_cache
 from django.views.decorators.http import require_GET, require_http_methods
-
-from accounts.services.onboarding import onboard_from_resume
 
 from .forms import ResumeUploadForm
 from .models import Resume
 from .permissions import can_access_resume, find_duplicate_upload, remember_upload
 from .services.resume_intake import create_resume
-from .services.resume_parsing import parse_and_store
+from .tasks import queue_parsing
 
 PREVIEW_CHARS = 1500
-
-
-def notify_about_account(request, resume: Resume) -> None:
-    """Create an account for anonymous uploads. The message is the same for new and
-    existing emails, so this page never reveals who already has an account."""
-    outcome = onboard_from_resume(resume)
-    if outcome == "no_email":
-        messages.warning(
-            request,
-            "We could not find a valid email address in your resume, so no account was created. "
-            "Please check the email in your resume and upload it again.",
-        )
-    elif outcome in ("created", "exists"):
-        messages.info(
-            request,
-            "Check your inbox: if this email address is new to us, we sent you a link to set your "
-            "password. Already have an account? Log in, and this resume will be linked to it.",
-        )
+REFRESH_SECONDS = 4                       # how often the page reloads while the AI works
+ANALYSIS_TIMEOUT = timedelta(minutes=15)  # stop reloading after this (e.g. worker not running)
 
 
 @require_http_methods(["GET", "POST"])
@@ -46,7 +31,9 @@ def upload_resume(request):
             if duplicate:
                 # An earlier upload may not have been analysed yet (e.g. the AI was unavailable).
                 if duplicate.status == Resume.Status.EXTRACTED:
-                    parse_and_store(duplicate)
+                    duplicate.error_message = ""
+                    duplicate.save(update_fields=["error_message", "updated_at"])
+                    queue_parsing(duplicate.pk)
                 messages.info(request, "You already uploaded this file. Showing your earlier upload.")
                 return redirect("resumes:detail", pk=duplicate.pk)
 
@@ -54,21 +41,12 @@ def upload_resume(request):
             resume = create_resume(validated, form.cleaned_data["file"].name, owner=owner)
             remember_upload(request, resume)
 
-            # Runs inside the request for now; Phase 11 moves it to a background task.
+            # The slow AI step runs in the Celery worker; this request answers at once.
             if resume.status == Resume.Status.EXTRACTED:
-                resume = parse_and_store(resume)
-
-            if resume.status == Resume.Status.PARSED:
-                messages.success(request, "Your resume was analysed. Please check the extracted details.")
-                if not request.user.is_authenticated:
-                    notify_about_account(request, resume)
-            elif resume.status == Resume.Status.FAILED:
-                messages.warning(request, resume.error_message)
+                queue_parsing(resume.pk)
+                messages.success(request, "Your resume was uploaded. Our AI is analysing it now.")
             else:
-                messages.warning(
-                    request,
-                    "Your resume was uploaded and its text extracted, but the AI analysis did not complete.",
-                )
+                messages.warning(request, resume.error_message)
             return redirect("resumes:detail", pk=resume.pk)
     else:
         form = ResumeUploadForm()
@@ -105,6 +83,22 @@ def build_parsed_context(resume: Resume) -> dict:
     }
 
 
+def build_analysis_context(request, resume: Resume) -> dict:
+    """Is the AI still working? Should we tell an anonymous uploader about the email?"""
+    waiting = resume.status == Resume.Status.EXTRACTED and not resume.error_message
+    too_long = waiting and timezone.now() - resume.updated_at > ANALYSIS_TIMEOUT
+    return {
+        "analysing": waiting and not too_long,
+        "analysis_slow": too_long,
+        "refresh_seconds": REFRESH_SECONDS,
+        "account_notice": (
+            not request.user.is_authenticated
+            and resume.status == Resume.Status.PARSED
+            and not resume.owner_id
+        ),
+    }
+
+
 @never_cache
 @require_GET
 def resume_detail(request, pk):
@@ -115,6 +109,7 @@ def resume_detail(request, pk):
         "preview_truncated": len(resume.extracted_text) > PREVIEW_CHARS,
     }
     context.update(build_parsed_context(resume))
+    context.update(build_analysis_context(request, resume))
     return render(request, "resumes/detail.html", context)
 
 

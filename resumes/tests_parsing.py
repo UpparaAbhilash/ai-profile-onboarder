@@ -61,21 +61,22 @@ class ResumeParsingFlowTests(TestCase):
     @patch("resumes.services.ai_parser.get_client")
     def test_upload_runs_ai_and_shows_results(self, mock_get_client):
         mock_get_client.return_value = fake_client(make_resume_data())
-        response = self.client.post(
-            reverse("resumes:upload"), {"file": upload(make_text_pdf())}, follow=True
-        )
+        # execute=True runs the queued background task (eagerly, in this process).
+        with self.captureOnCommitCallbacks(execute=True):
+            self.client.post(reverse("resumes:upload"), {"file": upload(make_text_pdf())})
         resume = Resume.objects.get()
         self.assertEqual(resume.status, Resume.Status.PARSED)
+        response = self.client.get(reverse("resumes:detail", args=[resume.pk]))
         self.assertContains(response, "asha.rao@example.com")
         self.assertContains(response, "Extracted details")
 
     def test_upload_without_ai_configuration_still_works(self):
-        response = self.client.post(
-            reverse("resumes:upload"), {"file": upload(make_text_pdf())}, follow=True
-        )
+        with self.captureOnCommitCallbacks(execute=True):
+            self.client.post(reverse("resumes:upload"), {"file": upload(make_text_pdf())})
         resume = Resume.objects.get()
         self.assertEqual(resume.status, Resume.Status.EXTRACTED)
         self.assertIn("not configured", resume.error_message)
+        response = self.client.get(reverse("resumes:detail", args=[resume.pk]))
         self.assertEqual(response.status_code, 200)
 
     @patch("resumes.services.ai_parser.get_client")

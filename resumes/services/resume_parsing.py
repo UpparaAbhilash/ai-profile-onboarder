@@ -12,11 +12,13 @@ logger = logging.getLogger(__name__)
 PARSEABLE_STATUSES = {Resume.Status.EXTRACTED, Resume.Status.PARSED}
 
 
-def parse_and_store(resume: Resume, client=None) -> Resume:
+def parse_and_store(resume: Resume, client=None, raise_retryable: bool = False) -> Resume:
     """Parse the resume's extracted text with the AI and store the result.
 
     - Scanned/failed resumes are skipped (nothing is sent to the AI).
     - On AI errors the status is NOT changed, so the resume can be re-parsed later.
+    - raise_retryable=True (used by the background task): temporary AI errors are
+      raised instead of saved, so the task can try again later.
     - Logged-in uploads get their profile filled straight away.
     """
     if resume.status not in PARSEABLE_STATUSES or not resume.extracted_text:
@@ -30,6 +32,8 @@ def parse_and_store(resume: Resume, client=None) -> Resume:
         logger.warning(
             "AI parsing failed for resume id=%s (retryable=%s): %s", resume.pk, exc.retryable, exc
         )
+        if raise_retryable and exc.retryable:
+            raise  # the background task retries later; the page keeps showing "analysing"
         resume.error_message = f"AI analysis failed: {exc}"
         resume.save(update_fields=["error_message", "updated_at"])
         return resume
