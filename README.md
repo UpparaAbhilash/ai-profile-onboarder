@@ -36,3 +36,4 @@ Bootstrap · Celery + Redis
 - [x] Phase 10B — Jobs pipeline sorted by skill match, audit log browser, safe CSV export
 - [x] Phase 11A — Redis (Docker, localhost only) + Celery worker, JSON-only messages, eager mode in tests
 - [x] Phase 11B — Background AI parsing with Celery: on_commit queueing, retries with backoff for temporary errors, idempotent tasks, auto-refreshing status page
+- [x] Phase 12A — Test suite sped up (fast test hasher, --keepdb), coverage reporting, reparse --queue repair command

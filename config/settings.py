@@ -233,3 +233,11 @@ CELERY_TASK_EAGER_PROPAGATES = True           # in eager mode, errors are raised
 # Tests never need Redis or a worker: tasks run immediately in the test process.
 if len(sys.argv) > 1 and sys.argv[1] == "test":
     CELERY_TASK_ALWAYS_EAGER = True
+
+# ---------------------------------------------------------------------------
+# Faster tests (Phase 12)
+# ---------------------------------------------------------------------------
+if len(sys.argv) > 1 and sys.argv[1] == "test":
+    # Real password hashing is slow ON PURPOSE (about a million rounds) to stop attackers.
+    # Tests create hundreds of users, so they use a fast hasher. Never used outside tests.
+    PASSWORD_HASHERS = ["django.contrib.auth.hashers.MD5PasswordHasher"]
