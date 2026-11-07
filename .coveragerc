@@ -1,0 +1,18 @@
+[run]
+source = .
+branch = True
+omit =
+    .venv/*
+    */migrations/*
+    */tests.py
+    */tests_*.py
+    */test_*.py
+    manage.py
+    check_env.py
+    config/asgi.py
+    config/wsgi.py
+
+[report]
+show_missing = True
+sort = Cover
+precision = 1

@@ -1,6 +1,6 @@
 """Automated tests for the custom User model and its manager."""
 from django.contrib.auth import get_user_model
-from django.test import TestCase
+from django.test import TestCase, override_settings
 
 User = get_user_model()
 
@@ -13,6 +13,7 @@ class UserManagerTests(TestCase):
         self.assertFalse(user.is_staff)
         self.assertFalse(user.is_superuser)
 
+    @override_settings(PASSWORD_HASHERS=["django.contrib.auth.hashers.PBKDF2PasswordHasher"])
     def test_password_is_hashed_not_stored_in_plaintext(self):
         user = User.objects.create_user(email="ravi@example.com", password="S3cure-pass-123")
         self.assertNotEqual(user.password, "S3cure-pass-123")
