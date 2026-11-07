@@ -66,6 +66,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
+    "config.middleware.SecurityHeadersMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
@@ -241,3 +242,25 @@ if len(sys.argv) > 1 and sys.argv[1] == "test":
     # Real password hashing is slow ON PURPOSE (about a million rounds) to stop attackers.
     # Tests create hundreds of users, so they use a fast hasher. Never used outside tests.
     PASSWORD_HASHERS = ["django.contrib.auth.hashers.MD5PasswordHasher"]
+
+# ---------------------------------------------------------------------------
+# Security hardening (Phase 12B)
+# Off by default for local development (no HTTPS on 127.0.0.1).
+# Switched on in production through .env, without any code change.
+# ---------------------------------------------------------------------------
+SECURE_SSL_REDIRECT = env_bool("DJANGO_SECURE_SSL_REDIRECT", default=False)
+SESSION_COOKIE_SECURE = env_bool("DJANGO_SECURE_COOKIES", default=False)
+CSRF_COOKIE_SECURE = SESSION_COOKIE_SECURE
+SECURE_HSTS_SECONDS = int(os.getenv("DJANGO_SECURE_HSTS_SECONDS") or "0")
+SECURE_HSTS_INCLUDE_SUBDOMAINS = SECURE_HSTS_SECONDS > 0
+# Behind a reverse proxy (Phase 14) the proxy tells Django the original request used HTTPS.
+if env_bool("DJANGO_BEHIND_HTTPS_PROXY", default=False):
+    SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+
+# Always on (also locally):
+X_FRAME_OPTIONS = "DENY"
+SECURE_CONTENT_TYPE_NOSNIFF = True
+SECURE_REFERRER_POLICY = "same-origin"
+SECURE_CROSS_ORIGIN_OPENER_POLICY = "same-origin"
+SESSION_COOKIE_HTTPONLY = True        # JavaScript can never read the session cookie
+SESSION_COOKIE_AGE = 60 * 60 * 8      # log out automatically after 8 hours

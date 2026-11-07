@@ -49,7 +49,7 @@
                         <td class="text-end">
                             {% if application.status in withdrawable %}
                                 <form method="post" action="{% url 'jobs:withdraw' application.pk %}"
-                                      onsubmit="return confirm('Withdraw this application?');">
+                                      data-confirm="Withdraw this application?">
                                     {% csrf_token %}
                                     <button type="submit" class="btn btn-outline-danger btn-sm">Withdraw</button>
                                 </form>

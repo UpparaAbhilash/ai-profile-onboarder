@@ -37,3 +37,4 @@ Bootstrap · Celery + Redis
 - [x] Phase 11A — Redis (Docker, localhost only) + Celery worker, JSON-only messages, eager mode in tests
 - [x] Phase 11B — Background AI parsing with Celery: on_commit queueing, retries with backoff for temporary errors, idempotent tasks, auto-refreshing status page
 - [x] Phase 12A — Test suite sped up (fast test hasher, --keepdb), coverage reporting, reparse --queue repair command
+- [x] Phase 12B1 — Security headers + Content Security Policy, HTTPS settings via .env, check --deploy, pip-audit, error-path tests
