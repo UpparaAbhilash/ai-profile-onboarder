@@ -8,7 +8,9 @@
         <h1 class="h3 mb-3">Log in</h1>
         <div class="card shadow-sm">
             <div class="card-body">
-                {% if form.non_field_errors %}
+                {% if lockout_message %}
+                    <div class="alert alert-danger">{{ lockout_message }}</div>
+                {% elif form.non_field_errors %}
                     <div class="alert alert-danger">
                         {% for error in form.non_field_errors %}{{ error }}{% endfor %}
                     </div>

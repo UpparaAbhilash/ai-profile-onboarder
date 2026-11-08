@@ -38,3 +38,4 @@ Bootstrap · Celery + Redis
 - [x] Phase 11B — Background AI parsing with Celery: on_commit queueing, retries with backoff for temporary errors, idempotent tasks, auto-refreshing status page
 - [x] Phase 12A — Test suite sped up (fast test hasher, --keepdb), coverage reporting, reparse --queue repair command
 - [x] Phase 12B1 — Security headers + Content Security Policy, HTTPS settings via .env, check --deploy, pip-audit, error-path tests
+- [x] Phase 12B2 — Login rate limiting (per email + per IP, admin included), SECURITY.md with OWASP Top 10:2025 mapping

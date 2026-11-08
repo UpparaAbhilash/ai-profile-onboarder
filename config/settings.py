@@ -264,3 +264,17 @@ SECURE_REFERRER_POLICY = "same-origin"
 SECURE_CROSS_ORIGIN_OPENER_POLICY = "same-origin"
 SESSION_COOKIE_HTTPONLY = True        # JavaScript can never read the session cookie
 SESSION_COOKIE_AGE = 60 * 60 * 8      # log out automatically after 8 hours
+
+# ---------------------------------------------------------------------------
+# Login rate limiting (Phase 12B2)
+# ---------------------------------------------------------------------------
+AUTHENTICATION_BACKENDS = ["accounts.backends.ThrottledModelBackend"]
+
+# Local development: in-memory cache (one process). Phase 14: Redis, shared by all processes.
+CACHES = {
+    "default": {"BACKEND": "django.core.cache.backends.locmem.LocMemCache", "LOCATION": "onboarder"}
+}
+# Tests: no cache, so failed logins in one test never lock out another test.
+# The rate-limit tests switch on a real cache for themselves.
+if len(sys.argv) > 1 and sys.argv[1] == "test":
+    CACHES = {"default": {"BACKEND": "django.core.cache.backends.dummy.DummyCache"}}

@@ -3,6 +3,22 @@ from django.contrib import messages
 from django.contrib.auth import views as auth_views
 from django.urls import reverse_lazy
 
+from .services.login_throttle import LOCKOUT_MESSAGE, client_ip, is_locked
+
+
+class ThrottledLoginView(auth_views.LoginView):
+    """Django's login view, plus a clear message (HTTP 429) during a lockout."""
+
+    template_name = "accounts/login.html"
+    redirect_authenticated_user = True
+
+    def form_invalid(self, form):
+        email = self.request.POST.get("username", "")
+        if is_locked(email, client_ip(self.request)):
+            context = self.get_context_data(form=form, lockout_message=LOCKOUT_MESSAGE)
+            return self.render_to_response(context, status=429)
+        return super().form_invalid(form)
+
 
 class SetPasswordView(auth_views.PasswordResetConfirmView):
     """Handles both the onboarding link and 'Forgot password?' links."""
