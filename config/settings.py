@@ -277,4 +277,9 @@ CACHES = {
 # Tests: no cache, so failed logins in one test never lock out another test.
 # The rate-limit tests switch on a real cache for themselves.
 if len(sys.argv) > 1 and sys.argv[1] == "test":
-    CACHES = {"default": {"BACKEND": "django.core.cache.backends.dummy.DummyCache"}}
+    CACHES = {"default": {"BACKEND": "django.core.cache.backends.dummy.DummyCache"}}   
+# ---------------------------------------------------------------------------
+# Data retention (Phase 12C) - explained on the privacy page
+# ---------------------------------------------------------------------------
+UNCLAIMED_DATA_RETENTION_DAYS = int(os.getenv("UNCLAIMED_DATA_RETENTION_DAYS") or "30")
+AUDIT_LOG_RETENTION_DAYS = int(os.getenv("AUDIT_LOG_RETENTION_DAYS") or "365")
