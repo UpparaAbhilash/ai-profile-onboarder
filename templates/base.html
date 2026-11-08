@@ -5,15 +5,23 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>{% block title %}Profile Onboarder{% endblock %}</title>
+    <meta name="description" content="Upload a PDF resume and get a structured, editable candidate profile.">
+    <link rel="icon" href="{% static 'img/favicon.svg' %}" type="image/svg+xml">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="{% static 'css/style.css' %}" rel="stylesheet">
-    {% block extra_head %}{% endblock %}    
+    {% block extra_head %}{% endblock %}
 </head>
 <body class="d-flex flex-column min-vh-100">
+    <!-- Keyboard and screen-reader users can jump straight to the content. -->
+    <a class="visually-hidden-focusable skip-link" href="#main">Skip to main content</a>
 
-    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+    {% with ns=request.resolver_match.namespace page=request.resolver_match.url_name %}
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark" aria-label="Main navigation">
         <div class="container">
-            <a class="navbar-brand fw-semibold" href="{% url 'home' %}">Profile Onboarder</a>
+            <a class="navbar-brand fw-semibold d-flex align-items-center gap-2" href="{% url 'home' %}">
+                <img src="{% static 'img/favicon.svg' %}" alt="" width="28" height="28">
+                Profile Onboarder
+            </a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
                     data-bs-target="#mainNav" aria-controls="mainNav"
                     aria-expanded="false" aria-label="Toggle navigation">
@@ -23,22 +31,32 @@
             <div class="collapse navbar-collapse" id="mainNav">
                 <ul class="navbar-nav ms-auto align-items-lg-center">
                     <li class="nav-item">
-                        <a class="nav-link" href="{% url 'jobs:list' %}">Jobs</a>
+                        <a class="nav-link{% if ns == 'jobs' and page != 'my_applications' %} active{% endif %}"
+                           {% if ns == 'jobs' and page != 'my_applications' %}aria-current="page"{% endif %}
+                           href="{% url 'jobs:list' %}">Jobs</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="{% url 'resumes:upload' %}">Upload resume</a>
+                        <a class="nav-link{% if ns == 'resumes' %} active{% endif %}"
+                           {% if ns == 'resumes' %}aria-current="page"{% endif %}
+                           href="{% url 'resumes:upload' %}">Upload resume</a>
                     </li>
                     {% if user.is_authenticated %}
                         <li class="nav-item">
-                            <a class="nav-link" href="{% url 'profiles:me' %}">My profile</a>
+                            <a class="nav-link{% if ns == 'profiles' %} active{% endif %}"
+                               {% if ns == 'profiles' %}aria-current="page"{% endif %}
+                               href="{% url 'profiles:me' %}">My profile</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" href="{% url 'jobs:my_applications' %}">My applications</a>
+                            <a class="nav-link{% if page == 'my_applications' %} active{% endif %}"
+                               {% if page == 'my_applications' %}aria-current="page"{% endif %}
+                               href="{% url 'jobs:my_applications' %}">My applications</a>
                         </li>
                         {% if perms.profiles.review_profile %}
                             <li class="nav-item">
-                                <a class="nav-link" href="{% url 'dashboard:home' %}">Dashboard</a>
-                             </li>
+                                <a class="nav-link{% if ns == 'dashboard' %} active{% endif %}"
+                                   {% if ns == 'dashboard' %}aria-current="page"{% endif %}
+                                   href="{% url 'dashboard:home' %}">Dashboard</a>
+                            </li>
                         {% endif %}
                         {% if user.is_staff %}
                             <li class="nav-item">
@@ -46,7 +64,7 @@
                             </li>
                         {% endif %}
                         <li class="nav-item">
-                            <span class="navbar-text mx-lg-3">{{ user.email }}</span>
+                            <span class="navbar-text mx-lg-3 small">{{ user.email }}</span>
                         </li>
                         <li class="nav-item">
                             <!-- Logout must be a POST request (protects against CSRF logout attacks) -->
@@ -64,8 +82,9 @@
             </div>
         </div>
     </nav>
+    {% endwith %}
 
-    <main class="container py-4 flex-grow-1">
+    <main id="main" class="container py-4 flex-grow-1" tabindex="-1">
         {% if messages %}
             {% for message in messages %}
                 <div class="alert alert-{{ message.tags|default:'info' }} alert-dismissible fade show" role="alert">
@@ -79,7 +98,7 @@
     </main>
 
     <footer class="bg-light border-top py-3 mt-auto">
-        <div class="container text-muted small d-flex justify-content-between">
+        <div class="container text-muted small d-flex flex-wrap justify-content-between gap-2">
             <span>AI-Powered Profile Onboarder</span>
             <a class="link-secondary" href="{% url 'accounts:privacy' %}">Privacy &amp; your data</a>
         </div>
@@ -87,5 +106,6 @@
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="{% static 'js/confirm.js' %}"></script>
+    <script src="{% static 'js/ui.js' %}"></script>
 </body>
 </html>

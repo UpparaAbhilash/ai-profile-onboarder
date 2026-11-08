@@ -41,3 +41,4 @@ Bootstrap · Celery + Redis
 - [x] Phase 12B2 — Login rate limiting (per email + per IP, admin included), SECURITY.md with OWASP Top 10:2025 mapping
 - [x] Phase 12C1 — Data retention: account erasure incl. files, purge_old_data command (unclaimed data, inactive accounts, audit log, orphan files)
 - [x] Phase 12C2 — GDPR self-service: privacy page with retention table, "Download my data" (JSON), "Delete my account" with re-authentication
+- [x] Phase 13A — Design tokens (one brand colour), accessibility basics (skip link, focus, aria-current, reduced motion), new home page, upload UX with early file checks and double-submit protection

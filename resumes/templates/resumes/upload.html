@@ -7,8 +7,8 @@
     <div class="col-lg-7">
         <h1 class="h3 mb-2">Upload your resume</h1>
         <p class="text-muted">
-            PDF only, up to {{ max_mb }} MB. We read the text in your resume to build your profile.
-            Scanned images are not supported yet.
+            We read the text in your resume and build your profile from it. You can check and edit
+            everything afterwards.
         </p>
 
         <div class="card shadow-sm">
@@ -17,24 +17,30 @@
                 <form method="post" enctype="multipart/form-data" novalidate>
                     {% csrf_token %}
 
-                    <div class="mb-3">
+                    <div class="upload-area mb-3">
                         <label for="{{ form.file.id_for_label }}" class="form-label fw-semibold">
                             {{ form.file.label }}
                         </label>
                         {{ form.file }}
+                        <div id="file-help" class="form-text">
+                            PDF exported from Word or Google Docs, up to {{ max_mb }} MB. Scanned images are not supported yet.
+                        </div>
+                        <div id="file-info" class="small mt-2" aria-live="polite"></div>
                         {% for error in form.file.errors %}
                             <div class="invalid-feedback d-block">{{ error }}</div>
                         {% endfor %}
                     </div>
 
-                    <button type="submit" class="btn btn-primary">Upload and extract text</button>
+                    <button type="submit" class="btn btn-primary" data-loading-text="Uploading…">
+                        Upload resume
+                    </button>
                 </form>
             </div>
         </div>
 
         <p class="small text-muted mt-3 mb-0">
             Privacy: your file is stored privately under a random name. Only you and authorised
-            reviewers can open it.
+            reviewers can open it. <a href="{% url 'accounts:privacy' %}">How we handle your data</a>
         </p>
     </div>
 </div>

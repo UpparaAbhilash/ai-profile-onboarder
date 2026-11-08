@@ -3,55 +3,80 @@
 {% block title %}Home · Profile Onboarder{% endblock %}
 
 {% block content %}
-<div class="p-4 p-md-5 mb-4 bg-body-tertiary rounded-3 border">
-    <h1 class="display-6 fw-semibold">AI-Powered Profile Onboarder</h1>
-    <p class="lead mb-0">
-        Upload a PDF resume and get a structured, editable candidate profile in minutes.
-    </p>
-        <a class="btn btn-primary mt-3" href="{% url 'resumes:upload' %}">Upload your resume</a>
-</div>
+<section class="hero rounded-4 p-4 p-md-5 mb-5">
+    <div class="row align-items-center g-4">
+        <div class="col-lg-7">
+            <h1 class="display-6 fw-semibold">AI-Powered Profile Onboarder</h1>
+            <p class="lead">
+                Upload a PDF resume and get a structured, editable candidate profile in minutes.
+                Then apply for jobs with one click.
+            </p>
+            <div class="d-flex flex-wrap gap-2 mt-4">
+                {% if user.is_authenticated %}
+                    <a class="btn btn-primary btn-lg" href="{% url 'profiles:me' %}">Go to my profile</a>
+                    <a class="btn btn-outline-primary btn-lg" href="{% url 'jobs:list' %}">Browse jobs</a>
+                {% else %}
+                    <a class="btn btn-primary btn-lg" href="{% url 'resumes:upload' %}">Upload your resume</a>
+                    <a class="btn btn-outline-primary btn-lg" href="{% url 'jobs:list' %}">Browse jobs</a>
+                {% endif %}
+            </div>
+        </div>
+        <div class="col-lg-5">
+            <ul class="list-unstyled mb-0 small">
+                <li class="d-flex gap-2 mb-3">
+                    <span class="step-number flex-shrink-0" aria-hidden="true">✓</span>
+                    <span><strong>Verified, not invented.</strong> Every detail the AI extracts is checked against your resume.</span>
+                </li>
+                <li class="d-flex gap-2 mb-3">
+                    <span class="step-number flex-shrink-0" aria-hidden="true">✓</span>
+                    <span><strong>Private by design.</strong> Your PDF is never public; Aadhaar numbers are removed before AI processing.</span>
+                </li>
+                <li class="d-flex gap-2">
+                    <span class="step-number flex-shrink-0" aria-hidden="true">✓</span>
+                    <span><strong>You stay in control.</strong> Edit everything, download your data or delete your account at any time.</span>
+                </li>
+            </ul>
+        </div>
+    </div>
+</section>
 
-<h2 class="h5 mb-3">How it works</h2>
-<div class="row g-3">
-    <div class="col-md-3">
+<h2 class="h4 mb-3">How it works</h2>
+<ol class="row g-3 list-unstyled">
+    <li class="col-sm-6 col-lg-3">
         <div class="card h-100 step-card">
             <div class="card-body">
-                <span class="badge text-bg-primary mb-2">1</span>
+                <span class="step-number mb-2" aria-hidden="true">1</span>
                 <h3 class="h6">Upload</h3>
                 <p class="small text-muted mb-0">Upload your resume as a PDF.</p>
             </div>
         </div>
-    </div>
-    <div class="col-md-3">
+    </li>
+    <li class="col-sm-6 col-lg-3">
         <div class="card h-100 step-card">
             <div class="card-body">
-                <span class="badge text-bg-primary mb-2">2</span>
+                <span class="step-number mb-2" aria-hidden="true">2</span>
                 <h3 class="h6">AI parsing</h3>
                 <p class="small text-muted mb-0">Your details are extracted into a structured profile.</p>
             </div>
         </div>
-    </div>
-    <div class="col-md-3">
+    </li>
+    <li class="col-sm-6 col-lg-3">
         <div class="card h-100 step-card">
             <div class="card-body">
-                <span class="badge text-bg-primary mb-2">3</span>
+                <span class="step-number mb-2" aria-hidden="true">3</span>
                 <h3 class="h6">Review</h3>
                 <p class="small text-muted mb-0">Check and correct anything the AI missed.</p>
             </div>
         </div>
-    </div>
-    <div class="col-md-3">
+    </li>
+    <li class="col-sm-6 col-lg-3">
         <div class="card h-100 step-card">
             <div class="card-body">
-                <span class="badge text-bg-primary mb-2">4</span>
+                <span class="step-number mb-2" aria-hidden="true">4</span>
                 <h3 class="h6">Apply</h3>
                 <p class="small text-muted mb-0">Set your availability and apply for jobs.</p>
             </div>
         </div>
-    </div>
-</div>
-
-{% if user.is_authenticated %}
-    <p class="mt-4 mb-0">You are logged in as <strong>{{ user.email }}</strong>.</p>
-{% endif %}
+    </li>
+</ol>
 {% endblock %}
