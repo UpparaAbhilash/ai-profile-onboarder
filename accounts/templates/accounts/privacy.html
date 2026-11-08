@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+
+{% block title %}Privacy · Profile Onboarder{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-9">
+        <h1 class="h3 mb-3">Privacy and your data</h1>
+        <p class="text-muted">
+            This page explains which personal data this application stores, why, who can see it,
+            how long it is kept, and how you can download or delete it.
+        </p>
+
+        <h2 class="h5 mt-4">What we store and why</h2>
+        <ul>
+            <li><strong>Your resume (PDF)</strong>: to create your profile. Stored under a random file name and never publicly accessible.</li>
+            <li><strong>Profile details</strong> (name, contact details, experience, skills, projects): so reviewers can match you with jobs.</li>
+            <li><strong>Date of birth and Aadhaar</strong>: only if they are in your resume or you add them. We store the <em>last 4 digits</em> of an Aadhaar number, never the full number, and remove it before any text is sent to the AI.</li>
+            <li><strong>Job applications</strong>: so you and reviewers can follow their status.</li>
+        </ul>
+
+        <h2 class="h5 mt-4">AI processing</h2>
+        <p>
+            The text of your resume is sent to an AI service (OpenAI) to extract your profile details.
+            Aadhaar numbers are removed first. Every value the AI returns is checked against your resume,
+            and anything not found in it is discarded.
+        </p>
+
+        <h2 class="h5 mt-4">Who can see your data</h2>
+        <ul>
+            <li>You, after logging in.</li>
+            <li>Reviewers with explicit permission. Every time a reviewer opens your profile, this is recorded in an audit log.</li>
+            <li>Reviewer exports (CSV) never contain your contact details, date of birth or Aadhaar.</li>
+        </ul>
+
+        <h2 class="h5 mt-4">How long we keep it</h2>
+        <table class="table table-sm">
+            <thead>
+                <tr><th>Data</th><th>Kept for</th></tr>
+            </thead>
+            <tbody>
+                <tr><td>Resume uploaded but never linked to an account</td><td>{{ unclaimed_days }} days</td></tr>
+                <tr><td>Account created from your resume that you never activated</td><td>{{ unclaimed_days }} days</td></tr>
+                <tr><td>Your account, profile, resumes and applications</td><td>Until you delete your account</td></tr>
+                <tr><td>Audit log entries (who viewed or changed what)</td><td>{{ audit_days }} days</td></tr>
+                <tr><td>Login session</td><td>{{ session_hours }} hours</td></tr>
+            </tbody>
+        </table>
+
+        <h2 class="h5 mt-4">Your rights</h2>
+        {% if user.is_authenticated %}
+            <div class="d-flex flex-wrap gap-2">
+                <a class="btn btn-outline-primary" href="{% url 'accounts:my_data' %}">Download my data (JSON)</a>
+                <a class="btn btn-outline-danger" href="{% url 'accounts:delete_account' %}">Delete my account</a>
+            </div>
+            <p class="small text-muted mt-2">You can also correct your details at any time on your profile page.</p>
+        {% else %}
+            <p>
+                <a href="{% url 'accounts:login' %}">Log in</a> to download a copy of your data
+                or to delete your account and all your data.
+            </p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

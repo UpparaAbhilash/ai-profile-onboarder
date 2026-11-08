@@ -40,3 +40,4 @@ Bootstrap · Celery + Redis
 - [x] Phase 12B1 — Security headers + Content Security Policy, HTTPS settings via .env, check --deploy, pip-audit, error-path tests
 - [x] Phase 12B2 — Login rate limiting (per email + per IP, admin included), SECURITY.md with OWASP Top 10:2025 mapping
 - [x] Phase 12C1 — Data retention: account erasure incl. files, purge_old_data command (unclaimed data, inactive accounts, audit log, orphan files)
+- [x] Phase 12C2 — GDPR self-service: privacy page with retention table, "Download my data" (JSON), "Delete my account" with re-authentication

@@ -10,6 +10,9 @@ app_name = "accounts"
 
 urlpatterns = [
     path("login/", views.ThrottledLoginView.as_view(), name="login"),
+    path("privacy/", views.privacy, name="privacy"),
+    path("my-data/", views.download_my_data, name="my_data"),
+    path("delete/", views.delete_my_account, name="delete_account"),
     path("logout/", auth_views.LogoutView.as_view(), name="logout"),
     path(
         "password-reset/",
