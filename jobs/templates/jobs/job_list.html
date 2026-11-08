@@ -28,15 +28,15 @@
     </div>
 </form>
 
-<p class="small text-muted">{{ page_obj.paginator.count }} job(s) found</p>
+<p class="small text-muted" aria-live="polite">{{ page_obj.paginator.count }} job(s) found</p>
 
 {% for job in page_obj %}
-    <div class="card shadow-sm mb-3">
+    <article class="card shadow-sm mb-3 step-card">
         <div class="card-body">
             <div class="d-flex flex-wrap justify-content-between gap-2">
                 <div>
                     <h2 class="h5 mb-1">
-                        <a href="{% url 'jobs:detail' job.pk %}" class="text-decoration-none">{{ job.title }}</a>
+                        <a href="{% url 'jobs:detail' job.pk %}" class="text-decoration-none stretched-link">{{ job.title }}</a>
                     </h2>
                     <div class="text-muted small">
                         {{ job.company }} · {{ job.location }} · {{ job.get_employment_type_display }}
@@ -52,28 +52,15 @@
                 {% endfor %}
             </div>
         </div>
-    </div>
+    </article>
 {% empty %}
-    <div class="text-center text-muted py-5">No jobs match your search.</div>
+    {% if q or selected_type %}
+        {% url 'jobs:list' as all_jobs_url %}
+        {% include "includes/empty_state.html" with title="No jobs match your search" text="Try fewer or different words." action_url=all_jobs_url action_label="Show all jobs" %}
+    {% else %}
+        {% include "includes/empty_state.html" with title="No open jobs right now" text="New jobs are added regularly. Please check again soon." %}
+    {% endif %}
 {% endfor %}
 
-{% if page_obj.has_other_pages %}
-    <nav aria-label="Job pages">
-        <ul class="pagination">
-            {% if page_obj.has_previous %}
-                <li class="page-item">
-                    <a class="page-link" href="{% querystring page=page_obj.previous_page_number %}">Previous</a>
-                </li>
-            {% endif %}
-            <li class="page-item disabled">
-                <span class="page-link">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
-            </li>
-            {% if page_obj.has_next %}
-                <li class="page-item">
-                    <a class="page-link" href="{% querystring page=page_obj.next_page_number %}">Next</a>
-                </li>
-            {% endif %}
-        </ul>
-    </nav>
-{% endif %}
+{% include "includes/pagination.html" with label="Job pages" %}
 {% endblock %}

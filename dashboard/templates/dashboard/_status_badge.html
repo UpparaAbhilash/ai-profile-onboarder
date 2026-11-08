@@ -1,9 +1,2 @@
-{% if status == "open_to_work" %}
-    <span class="badge text-bg-success">{{ label }}</span>
-{% elif status == "reviewed" %}
-    <span class="badge text-bg-info">{{ label }}</span>
-{% elif status == "not_interested" %}
-    <span class="badge text-bg-dark">{{ label }}</span>
-{% else %}
-    <span class="badge text-bg-secondary">{{ label }}</span>
-{% endif %}
+{# Kept for the existing dashboard includes; the colours now come from one place. #}
+{% include "includes/status_badge.html" %}

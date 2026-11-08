@@ -10,20 +10,20 @@
 
 {% if applications %}
     <div class="table-responsive">
-        <table class="table align-middle">
+        <table class="table align-middle table-stack">
             <thead>
                 <tr>
-                    <th>Job</th>
-                    <th>Company</th>
-                    <th>Applied</th>
-                    <th>Status</th>
-                    <th></th>
+                    <th scope="col">Job</th>
+                    <th scope="col">Company</th>
+                    <th scope="col">Applied</th>
+                    <th scope="col">Status</th>
+                    <th scope="col"><span class="visually-hidden">Actions</span></th>
                 </tr>
             </thead>
             <tbody>
                 {% for application in applications %}
                     <tr>
-                        <td>
+                        <td data-label="Job">
                             {% if application.job.is_active %}
                                 <a href="{% url 'jobs:detail' application.job.pk %}">{{ application.job.title }}</a>
                             {% else %}
@@ -31,20 +31,10 @@
                                 <span class="badge text-bg-light border">closed</span>
                             {% endif %}
                         </td>
-                        <td>{{ application.job.company }}</td>
-                        <td>{{ application.applied_at|date:"d M Y" }}</td>
-                        <td>
-                            {% if application.status == "shortlisted" %}
-                                <span class="badge text-bg-success">{{ application.get_status_display }}</span>
-                            {% elif application.status == "under_review" %}
-                                <span class="badge text-bg-info">{{ application.get_status_display }}</span>
-                            {% elif application.status == "rejected" %}
-                                <span class="badge text-bg-danger">{{ application.get_status_display }}</span>
-                            {% elif application.status == "withdrawn" %}
-                                <span class="badge text-bg-light border">{{ application.get_status_display }}</span>
-                            {% else %}
-                                <span class="badge text-bg-secondary">{{ application.get_status_display }}</span>
-                            {% endif %}
+                        <td data-label="Company">{{ application.job.company }}</td>
+                        <td data-label="Applied">{{ application.applied_at|date:"d M Y" }}</td>
+                        <td data-label="Status">
+                            {% include "includes/status_badge.html" with status=application.status label=application.get_status_display %}
                         </td>
                         <td class="text-end">
                             {% if application.status in withdrawable %}
@@ -61,9 +51,7 @@
         </table>
     </div>
 {% else %}
-    <div class="text-center py-5">
-        <p class="text-muted">You have not applied for any jobs yet.</p>
-        <a class="btn btn-primary" href="{% url 'jobs:list' %}">Browse jobs</a>
-    </div>
+    {% url 'jobs:list' as jobs_url %}
+    {% include "includes/empty_state.html" with title="No applications yet" text="Find a job that matches your skills and apply with one click." action_url=jobs_url action_label="Browse jobs" %}
 {% endif %}
 {% endblock %}
