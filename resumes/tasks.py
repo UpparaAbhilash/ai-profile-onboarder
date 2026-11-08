@@ -25,7 +25,11 @@ RETRY_DELAYS = (30, 60, 120)
 QUEUE_ERROR_MESSAGE = "The AI analysis could not be started. Please try again later."
 
 
-@shared_task(bind=True, name="resumes.parse_resume", max_retries=len(RETRY_DELAYS))
+# ignore_result=True: the outcome lives in MySQL (status, parsed_data), so no Redis result
+# backend is needed. This also means a Redis outage cannot crash the upload request.
+@shared_task(
+    bind=True, name="resumes.parse_resume", max_retries=len(RETRY_DELAYS), ignore_result=True
+)
 def parse_resume_task(self, resume_id: int) -> str:
     """Parse one resume with the AI, then create the account for anonymous uploads.
 

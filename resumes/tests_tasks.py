@@ -10,7 +10,7 @@ import openai
 from celery.exceptions import Retry
 from django.contrib.auth import get_user_model
 from django.core import mail
-from django.test import TestCase, override_settings
+from django.test import SimpleTestCase, TestCase, override_settings
 from django.urls import reverse
 from django.utils import timezone
 from kombu.exceptions import OperationalError
@@ -182,3 +182,10 @@ class BackgroundUploadViewTests(TestCase):
         response = self.detail(resume)
         self.assertContains(response, "taking longer than usual")
         self.assertNotContains(response, 'http-equiv="refresh"')
+
+
+class ParseTaskConfigTests(SimpleTestCase):
+    def test_parse_task_does_not_use_the_result_backend(self):
+        # With a result backend, .delay() contacts Redis twice; if Redis is down,
+        # the first call raises RuntimeError and the upload crashes with HTTP 500.
+        self.assertTrue(parse_resume_task.ignore_result)
