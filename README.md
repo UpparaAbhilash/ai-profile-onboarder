@@ -17,6 +17,36 @@ Bootstrap · Celery + Redis
 ## Progress
 ## Progress
 ## Progress
+## Run it with Docker (one command)
+
+Requirements: Docker Desktop.
+
+```bash
+git clone https://github.com/UpparaAbhilash/ai-profile-onboarder.git
+cd ai-profile-onboarder
+cp .env.docker.example .env.docker   # then set passwords and a secret key
+docker compose up --build -d
+docker compose exec web python manage.py createsuperuser
+docker compose exec web python manage.py setup_roles
+docker compose exec web python manage.py seed_jobs
+```
+
+Open <http://127.0.0.1:8080>. Without an OpenAI key the app runs fully; only the AI parsing step reports "not configured".
+
+| Service | Purpose |
+|---|---|
+| `web` | Django on Gunicorn, static files via WhiteNoise |
+| `worker` | Celery: AI resume parsing in the background |
+| `beat` | Celery scheduler: daily GDPR retention cleanup |
+| `db` / `redis` | MySQL 8.4 / Redis (internal network only) |
+| `migrate` | Runs database migrations once, then exits |
+
+## Run the tests
+
+```bash
+python manage.py test --keepdb
+coverage run manage.py test --keepdb && coverage report
+```
 - [x] Phase 1 — Environment setup
 - [x] Phase 2 — Django project, apps, custom User model
 - [x] Phase 3A — MySQL database connected
@@ -44,3 +74,4 @@ Bootstrap · Celery + Redis
 - [x] Phase 13A — Design tokens (one brand colour), accessibility basics (skip link, focus, aria-current, reduced motion), new home page, upload UX with early file checks and double-submit protection
 - [x] Phase 13B — Reusable UI partials (status badge, empty state, pagination), one colour per status, helpful empty states, stacked tables on mobile
 - [x] Phase 14A — Docker: multi-stage image (non-root, Gunicorn, WhiteNoise), Compose stack with MySQL, Redis, Celery worker and beat (daily retention cleanup), health check, console logging
+- [x] Phase 14B — GitHub Actions CI (MySQL service, tests + coverage, migration check, check --deploy, pip-audit), secret scan, Docker quickstart

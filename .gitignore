@@ -44,3 +44,4 @@ htmlcov
 htmlcov/
 # Docker secrets
 .env.docker
+gitleaks-report.*
