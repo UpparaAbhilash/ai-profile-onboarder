@@ -42,3 +42,5 @@ htmlcov
 # Coverage reports
 .coverage
 htmlcov/
+# Docker secrets
+.env.docker

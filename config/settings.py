@@ -66,6 +66,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
+    "whitenoise.middleware.WhiteNoiseMiddleware",
     "config.middleware.SecurityHeadersMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
@@ -283,3 +284,59 @@ if len(sys.argv) > 1 and sys.argv[1] == "test":
 # ---------------------------------------------------------------------------
 UNCLAIMED_DATA_RETENTION_DAYS = int(os.getenv("UNCLAIMED_DATA_RETENTION_DAYS") or "30")
 AUDIT_LOG_RETENTION_DAYS = int(os.getenv("AUDIT_LOG_RETENTION_DAYS") or "365")
+
+# ---------------------------------------------------------------------------
+# Deployment (Phase 14)
+# ---------------------------------------------------------------------------
+from celery.schedules import crontab  # noqa: E402
+
+TESTING = len(sys.argv) > 1 and sys.argv[1] == "test"
+
+# WhiteNoise serves static files. In production every file gets a content hash in its
+# name (style.3f2a1b.css), so browsers may cache it forever. Locally and in tests the
+# plain storage is used, so no "collectstatic" is needed.
+STORAGES = {
+    "default": {"BACKEND": "django.core.files.storage.FileSystemStorage"},
+    "staticfiles": {
+        "BACKEND": (
+            "whitenoise.storage.CompressedManifestStaticFilesStorage"
+            if not DEBUG and not TESTING
+            else "django.contrib.staticfiles.storage.StaticFilesStorage"
+        )
+    },
+}
+
+import warnings  # noqa: E402
+
+# Locally the "staticfiles" folder only exists after collectstatic (done in the Docker build).
+warnings.filterwarnings("ignore", message=r"No directory at")
+
+# Needed when the site runs on a real HTTPS domain, e.g. https://onboarder.example.com
+CSRF_TRUSTED_ORIGINS = env_list("DJANGO_CSRF_TRUSTED_ORIGINS")
+
+# Health checks from the platform may use plain HTTP inside the server.
+SECURE_REDIRECT_EXEMPT = [r"^healthz/$"]
+
+# Containers keep no log files: everything goes to the console (docker compose logs).
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "formatters": {
+        "plain": {"format": "{asctime} {levelname} {name}: {message}", "style": "{"},
+    },
+    "handlers": {
+        "console": {"class": "logging.StreamHandler", "formatter": "plain"},
+    },
+    "root": {
+        "handlers": ["console"],
+        "level": os.getenv("DJANGO_LOG_LEVEL") or ("CRITICAL" if TESTING else "INFO"),
+    },
+}
+
+# Celery beat: the retention cleanup runs every night (see the privacy page).
+CELERY_BEAT_SCHEDULE = {
+    "purge-old-data-daily": {
+        "task": "accounts.purge_old_data",
+        "schedule": crontab(hour=3, minute=30),
+    },
+}

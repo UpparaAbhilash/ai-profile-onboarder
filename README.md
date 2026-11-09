@@ -43,3 +43,4 @@ Bootstrap · Celery + Redis
 - [x] Phase 12C2 — GDPR self-service: privacy page with retention table, "Download my data" (JSON), "Delete my account" with re-authentication
 - [x] Phase 13A — Design tokens (one brand colour), accessibility basics (skip link, focus, aria-current, reduced motion), new home page, upload UX with early file checks and double-submit protection
 - [x] Phase 13B — Reusable UI partials (status badge, empty state, pagination), one colour per status, helpful empty states, stacked tables on mobile
+- [x] Phase 14A — Docker: multi-stage image (non-root, Gunicorn, WhiteNoise), Compose stack with MySQL, Redis, Celery worker and beat (daily retention cleanup), health check, console logging
