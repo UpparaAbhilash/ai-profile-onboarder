@@ -34,9 +34,13 @@ jobs:
       DB_PORT: "3306"
 
     steps:
-      - name: Check out the code
+      - name: Check out the code (full history for the secret scan)
         uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
 
+      - name: Secret scan (gitleaks)
+        run: docker run --rm -v "$PWD:/repo" zricethezav/gitleaks:latest detect --source /repo --redact
       - name: Set up Python 3.13
         uses: actions/setup-python@v6
         with:

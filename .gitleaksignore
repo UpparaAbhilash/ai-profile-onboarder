@@ -1,0 +1,14 @@
+1812676c22e44f70054616de23b59b4546f51eca:accounts/tests_login_throttle.py:generic-api-key:12
+8519d318be696788c5b3344a2c22f30202105bf7:resumes/tests_tasks.py:generic-api-key:64
+7cf9c873629c7aa447125e7e492e385a2c07ab06:profiles/tests_status.py:generic-api-key:15
+1cb7e8257e6a0bd337dae0900c662f6779c81a59:accounts/test_onboarding.py:generic-api-key:21
+ff3fd6383bc4975bd27510ed1ac7a2106b5b1cc1:profiles/tests_edit.py:generic-api-key:11
+f00c7d27d6ca3fe5dad415c10aadaf52efbb9c58:profiles/tests_import.py:generic-api-key:16
+a2bd99dc8973aeece7ecf27b97f14f30f58e8e3e:resumes/tests.py:generic-api-key:218
+a2bd99dc8973aeece7ecf27b97f14f30f58e8e3e:resumes/tests.py:generic-api-key:219
+a2bd99dc8973aeece7ecf27b97f14f30f58e8e3e:resumes/tests.py:generic-api-key:220
+cc0307f686f094a1f4ee18fefa441a5d639b0e23:accounts/tests.py:generic-api-key:10
+cc0307f686f094a1f4ee18fefa441a5d639b0e23:accounts/tests.py:generic-api-key:17
+cc0307f686f094a1f4ee18fefa441a5d639b0e23:accounts/tests.py:generic-api-key:18
+cc0307f686f094a1f4ee18fefa441a5d639b0e23:accounts/tests.py:generic-api-key:27
+cc0307f686f094a1f4ee18fefa441a5d639b0e23:accounts/tests.py:generic-api-key:30
