@@ -190,6 +190,9 @@ This project was built step by step as a learning and portfolio project.
 
 </details>
 
+
+Project Screen recording:- https://github.com/user-attachments/assets/dd278213-e480-4aea-81e5-a032fef5c26b
+
 ## Author
 
 Built by **Abhilash Uppara** (Master's student at SRH university of Applied Sciences , Berlin) as a hands-on project in Django, Generative AI and secure, privacy-aware web development.
