@@ -18,6 +18,7 @@ from .services.applications import (
     skill_match,
     withdraw_application,
 )
+from .services.recommendations import MIN_MATCH_PERCENT, recommend_jobs
 
 PAGE_SIZE = 10
 
@@ -60,6 +61,23 @@ def job_list(request):
         "selected_type": selected_type,
         "employment_types": Job.EmploymentType.choices,
         "applied_job_ids": applied_job_ids,
+    })
+
+
+@login_required
+@require_GET
+def recommended(request):
+    """Jobs that fit the candidate's skills. Suggestions only: the candidate still clicks Apply."""
+    profile = get_profile(request.user)
+    if profile is None:
+        messages.info(request, "Upload your resume first. We will create your profile from it.")
+        return redirect("resumes:upload")
+
+    return render(request, "jobs/recommended.html", {
+        "profile": profile,
+        "recommendations": recommend_jobs(profile),
+        "min_percent": MIN_MATCH_PERCENT,
+        "not_interested": profile.status == JobSeekerProfile.Status.NOT_INTERESTED,
     })
 
 

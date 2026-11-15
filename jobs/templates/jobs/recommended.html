@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+
+{% block title %}Recommended jobs · Profile Onboarder{% endblock %}
+
+{% block content %}
+<div class="d-flex flex-wrap justify-content-between align-items-center mb-2 gap-2">
+    <h1 class="h3 mb-0">Recommended for you</h1>
+    <a class="btn btn-outline-primary btn-sm" href="{% url 'jobs:list' %}">All jobs</a>
+</div>
+<p class="text-muted small">
+    Open jobs where you have at least {{ min_percent }}% of the required skills, best match first.
+    We never apply for you: you decide on each job page.
+</p>
+
+{% if not_interested %}
+    <div class="alert alert-info small">
+        Your availability is <strong>Not Interested</strong>.
+        Change it to <strong>Open to Work</strong> on <a href="{% url 'profiles:me' %}">your profile</a> before you apply.
+    </div>
+{% endif %}
+
+{% for job, match in recommendations %}
+    <article class="card shadow-sm mb-3 step-card">
+        <div class="card-body">
+            <div class="d-flex flex-wrap justify-content-between gap-2">
+                <div>
+                    <h2 class="h5 mb-1">
+                        <a href="{% url 'jobs:detail' job.pk %}" class="text-decoration-none stretched-link">{{ job.title }}</a>
+                    </h2>
+                    <div class="text-muted small">
+                        {{ job.company }} · {{ job.location }} · {{ job.get_employment_type_display }}
+                    </div>
+                </div>
+                <span class="badge text-bg-primary align-self-start">{{ match.percent }}% match</span>
+            </div>
+            <div class="progress my-2" role="progressbar" aria-label="Skill match for {{ job.title }}"
+                 aria-valuenow="{{ match.percent }}" aria-valuemin="0" aria-valuemax="100" style="height: 0.4rem;">
+                <div class="progress-bar" style="width: {{ match.percent }}%"></div>
+            </div>
+            <div>
+                {% for name in match.matched %}
+                    <span class="badge rounded-pill text-bg-success me-1">✓ {{ name }}</span>
+                {% endfor %}
+                {% for name in match.missing %}
+                    <span class="badge rounded-pill text-bg-light border me-1">{{ name }}</span>
+                {% endfor %}
+            </div>
+        </div>
+    </article>
+{% empty %}
+    {% url 'jobs:list' as all_jobs_url %}
+    {% include "includes/empty_state.html" with title="No matching jobs yet" text="Add more skills to your profile, or browse all jobs." action_url=all_jobs_url action_label="Browse all jobs" %}
+{% endfor %}
+{% endblock %}
