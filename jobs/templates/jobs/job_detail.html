@@ -70,6 +70,22 @@
                     {% if application %}
                         <p class="small text-muted">You withdrew an earlier application. You can apply again.</p>
                     {% endif %}
+                    <form method="post" action="{% url 'jobs:draft_cover_note' job.pk %}" class="mb-3">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-outline-primary btn-sm w-100"
+                                data-loading-text="Writing a draft… (up to 20 seconds)">
+                            ✨ Draft a cover note with AI
+                        </button>
+                        <div class="form-text">Replaces the text in the box below. Nothing is sent to the employer.</div>
+                    </form>
+
+                    {% if ai_draft %}
+                        <div class="alert alert-info small" role="status">
+                            <strong>AI draft.</strong> Read it carefully, change anything that is not true
+                            or does not sound like you, then click Apply.
+                        </div>
+                    {% endif %}
+
                     <form method="post" action="{% url 'jobs:apply' job.pk %}">
                         {% csrf_token %}
                         <label for="{{ form.cover_note.id_for_label }}" class="form-label small">Cover note (optional)</label>

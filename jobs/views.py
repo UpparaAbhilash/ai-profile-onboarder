@@ -1,4 +1,5 @@
 """Job listings, job details, applying and the candidate's application history."""
+from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator
@@ -18,6 +19,7 @@ from .services.applications import (
     skill_match,
     withdraw_application,
 )
+from .services.cover_note import CoverNoteError, generate_cover_note, take_draft_slot
 from .services.recommendations import MIN_MATCH_PERCENT, recommend_jobs
 
 PAGE_SIZE = 10
@@ -96,14 +98,15 @@ def apply_state(user, profile, application, missing_fields) -> str:
     return "can_apply"
 
 
-@require_GET
-def job_detail(request, pk):
-    job = get_object_or_404(Job.objects.prefetch_related("required_skills"), pk=pk, is_active=True)
+def get_open_job(pk):
+    return get_object_or_404(Job.objects.prefetch_related("required_skills"), pk=pk, is_active=True)
+
+
+def job_detail_context(request, job) -> dict:
     profile = get_profile(request.user)
     application = Application.objects.filter(job=job, candidate=profile).first() if profile else None
     missing_fields = missing_required_fields(profile) if profile else []
-
-    return render(request, "jobs/job_detail.html", {
+    return {
         "job": job,
         "profile": profile,
         "application": application,
@@ -112,7 +115,54 @@ def job_detail(request, pk):
         "state": apply_state(request.user, profile, application, missing_fields),
         "form": ApplicationForm(),
         "min_years": round(job.min_experience_months / 12, 1) if job.min_experience_months else None,
-    })
+    }
+
+
+def draft_session_key(job) -> str:
+    return f"cover_note_draft_{job.pk}"
+
+
+@require_GET
+def job_detail(request, pk):
+    job = get_open_job(pk)
+    context = job_detail_context(request, job)
+
+    # An AI draft from draft_cover_note (shown once, then removed from the session).
+    draft = request.session.pop(draft_session_key(job), None)
+    if draft and context["state"] == "can_apply":
+        context["form"] = ApplicationForm(initial={"cover_note": draft})
+        context["ai_draft"] = True
+
+    return render(request, "jobs/job_detail.html", context)
+
+
+@login_required
+@require_POST
+def draft_cover_note(request, pk):
+    """Ask the AI for a cover note DRAFT. It never applies: the candidate edits and decides."""
+    job = get_open_job(pk)
+    context = job_detail_context(request, job)
+    if context["state"] != "can_apply":
+        messages.error(request, "You can only draft a cover note for a job you can apply for.")
+        return redirect("jobs:detail", pk=job.pk)
+
+    if not take_draft_slot(request.user):
+        messages.error(
+            request,
+            f"You reached today's limit of {settings.COVER_NOTE_DAILY_LIMIT} AI drafts. "
+            "Please write your note yourself or try again tomorrow.",
+        )
+        return redirect("jobs:detail", pk=job.pk)
+
+    try:
+        draft = generate_cover_note(context["profile"], job)
+    except CoverNoteError as exc:
+        messages.error(request, str(exc))
+        return redirect("jobs:detail", pk=job.pk)
+
+    # Post/Redirect/Get: reloading the page does not call the AI (and cost money) again.
+    request.session[draft_session_key(job)] = draft
+    return redirect("jobs:detail", pk=job.pk)
 
 
 @login_required

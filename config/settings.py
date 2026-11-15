@@ -181,6 +181,8 @@ OPENAI_MODEL = os.getenv("OPENAI_MODEL", "")
 OPENAI_TIMEOUT_SECONDS = int(os.getenv("OPENAI_TIMEOUT_SECONDS", "60"))
 # Maximum characters of resume text sent to the AI (limits cost).
 RESUME_MAX_AI_INPUT_CHARS = 20_000
+# AI cover note drafts per user per day (Phase 16B): protects the AI budget.
+COVER_NOTE_DAILY_LIMIT = int(os.getenv("COVER_NOTE_DAILY_LIMIT") or "5")
 # Safety: automated tests must NEVER call the real (paid) AI service.
 if len(sys.argv) > 1 and sys.argv[1] == "test":
     OPENAI_API_KEY = ""
@@ -318,6 +320,7 @@ CSRF_TRUSTED_ORIGINS = env_list("DJANGO_CSRF_TRUSTED_ORIGINS")
 SECURE_REDIRECT_EXEMPT = [r"^healthz/$"]
 
 # Containers keep no log files: everything goes to the console (docker compose logs).
+LOG_LEVEL = os.getenv("DJANGO_LOG_LEVEL") or ("CRITICAL" if TESTING else "INFO")
 LOGGING = {
     "version": 1,
     "disable_existing_loggers": False,
@@ -329,7 +332,12 @@ LOGGING = {
     },
     "root": {
         "handlers": ["console"],
-        "level": os.getenv("DJANGO_LOG_LEVEL") or ("CRITICAL" if TESTING else "INFO"),
+        "level": LOG_LEVEL,
+    },
+    # Django's own logger has its own level (INFO), so it must be set here too:
+    # otherwise expected 403/404/429 warnings fill the test output.
+    "loggers": {
+        "django": {"level": LOG_LEVEL},
     },
 }
 

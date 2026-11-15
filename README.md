@@ -35,7 +35,7 @@ contain sensitive data (date of birth, national ID numbers) that should not be s
 | AI-filled profile, fully editable (projects, certifications) | Jobs pipeline sorted by skill match | Role-based access (least privilege), IDOR-safe URLs |
 | Account created automatically, one-time set-password link | Status workflow with history and audit log | Login rate limiting, CSP, secure headers |
 | Transparent 0–100 profile score with tips | CSV export **without** contact details, DOB or ID numbers | Daily GDPR retention cleanup (Celery beat) |
-| Job search, apply, withdraw, re-apply | Audit log browser (who viewed which profile) | Docker stack, CI pipeline, 255 automated tests |
+| Job search, **recommendations by skill match**, **AI cover note drafts** (you edit and approve), apply, withdraw, re-apply | Audit log browser (who viewed which profile) | Docker stack, CI pipeline, 294 automated tests |
 | Download my data (JSON), delete my account | | Accessible, mobile-friendly UI |
 
 | Upload and live status | Reviewer dashboard | Mobile |
@@ -71,7 +71,7 @@ flowchart LR
 | Background jobs | Celery 5, Redis (JSON-only messages) |
 | Frontend | Django templates, Bootstrap 5.3, small vanilla JS (no inline scripts) |
 | Deployment | Docker multi-stage image, Gunicorn, WhiteNoise, Docker Compose |
-| Quality | Django test runner (255 tests, ~92 % branch coverage), coverage.py, GitHub Actions, gitleaks, pip-audit |
+| Quality | Django test runner (294 tests, ~92 % branch coverage), coverage.py, GitHub Actions, gitleaks, pip-audit |
 
 ## Key engineering decisions
 
@@ -81,6 +81,7 @@ flowchart LR
 - **Explicit state machines** for profile and application status, with row locks against race conditions and an audit trail.
 - **Reliable background work.** Tasks are queued with `transaction.on_commit`, are idempotent, and retry only temporary AI errors (timeouts, rate limits, 5xx) with backoff; permanent errors fail fast and cost nothing.
 - **Privacy as a feature.** Users can download all their data and delete their account; the deletion also removes the PDF files that Django would leave behind. Unclaimed data is purged automatically after 30 days.
+- **The human decides.** Job recommendations reuse the same skill-match function as the job page and only *suggest* jobs. The app never applies on its own: the candidate reviews the profile and clicks Apply. AI cover notes are only drafts in an editable box, limited per user per day, and the AI never sees the candidate's name or contact details.
 - **Security in depth.** Content Security Policy without inline scripts (enforced by a test), login rate limiting in the authentication backend (covers the admin too), no account enumeration, `check --deploy` clean in production configuration. See [SECURITY.md](SECURITY.md) for the full OWASP Top 10:2025 mapping.
 
 ## Run it with Docker (one command)
@@ -123,7 +124,7 @@ python manage.py runserver                             # terminal 2
 ## Tests and quality checks
 
 ```bash
-python manage.py test --keepdb                            # 255 tests, about 6 seconds
+python manage.py test --keepdb                            # 294 tests, about 10 seconds
 coverage run manage.py test --keepdb && coverage report   # ~92 % branch coverage
 python manage.py check --deploy
 pip-audit
@@ -150,6 +151,7 @@ templates/   base layout and shared UI partials
 - Not publicly hosted on purpose (running costs and paid AI usage). The same Docker Compose stack runs on any Linux server.
 - Production would use Redis as Django cache, so login rate limits are shared between processes.
 - Uploaded files are validated but not virus-scanned.
+- Cover note drafts run inside the web request (short timeout, daily limit). Under heavy load they would move to Celery like resume parsing.
 
 ## Development log
 
@@ -187,6 +189,8 @@ This project was built step by step as a learning and portfolio project.
 - [x] Phase 14A — Docker: multi-stage image, Gunicorn, WhiteNoise, Compose stack with Celery worker and beat, health check
 - [x] Phase 14B — GitHub Actions CI, secret scan, Docker quickstart
 - [x] Phase 15 — Showcase README, screenshots, public repository
+- [x] Phase 16A — Job recommendations: best matching open jobs by skill match, suggestions only (never auto-applies)
+- [x] Phase 16B — AI cover note drafts: human-in-the-loop, no personal data sent to the AI, daily limit, Post/Redirect/Get
 
 </details>
 
