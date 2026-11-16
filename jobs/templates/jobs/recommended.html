@@ -3,10 +3,10 @@
 {% block title %}Recommended jobs · Profile Onboarder{% endblock %}
 
 {% block content %}
-<div class="d-flex flex-wrap justify-content-between align-items-center mb-2 gap-2">
-    <h1 class="h3 mb-0">Recommended for you</h1>
+<div class="d-flex gap-2">
+    <a class="btn btn-outline-primary btn-sm" href="{% url 'jobs:auto_apply' %}">Auto-apply settings</a>
     <a class="btn btn-outline-primary btn-sm" href="{% url 'jobs:list' %}">All jobs</a>
-</div>
+ </div>
 <p class="text-muted small">
     Open jobs where you have at least {{ min_percent }}% of the required skills, best match first.
     We never apply for you: you decide on each job page.

@@ -7,6 +7,7 @@ app_name = "jobs"
 urlpatterns = [
     path("", views.job_list, name="list"),
     path("recommended/", views.recommended, name="recommended"),
+    path("auto-apply/", views.auto_apply_settings, name="auto_apply"),
     path("<int:pk>/", views.job_detail, name="detail"),
     path("<int:pk>/apply/", views.apply, name="apply"),
     path("<int:pk>/draft-cover-note/", views.draft_cover_note, name="draft_cover_note"),

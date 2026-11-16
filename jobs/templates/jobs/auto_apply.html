@@ -1,0 +1,97 @@
+{% extends "base.html" %}
+
+{% block title %}Auto-apply · Profile Onboarder{% endblock %}
+
+{% block content %}
+<div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
+    <h1 class="h3 mb-0">Auto-apply</h1>
+    <a class="btn btn-outline-primary btn-sm" href="{% url 'jobs:recommended' %}">Recommended jobs</a>
+</div>
+
+<div class="row g-4">
+    <div class="col-lg-7">
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <p class="mb-3">
+                    Status:
+                    {% if rule.enabled %}
+                        <span class="badge text-bg-success">On</span>
+                        <span class="small text-muted">since {{ rule.enabled_at|date:"d M Y, H:i" }}</span>
+                    {% else %}
+                        <span class="badge text-bg-secondary">Off</span>
+                    {% endif %}
+                </p>
+
+                {% if form.non_field_errors %}
+                    <div class="alert alert-danger small" role="alert">
+                        {% for error in form.non_field_errors %}<div>{{ error }}</div>{% endfor %}
+                    </div>
+                {% endif %}
+
+                <form method="post">
+                    {% csrf_token %}
+
+                    <div class="form-check form-switch mb-3">
+                        {{ form.enabled }}
+                        <label class="form-check-label fw-semibold" for="{{ form.enabled.id_for_label }}">{{ form.enabled.label }}</label>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label" for="{{ form.min_match_percent.id_for_label }}">{{ form.min_match_percent.label }}</label>
+                        {{ form.min_match_percent }}
+                        {% for error in form.min_match_percent.errors %}<div class="invalid-feedback d-block">{{ error }}</div>{% endfor %}
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label" for="{{ form.locations.id_for_label }}">{{ form.locations.label }}</label>
+                        {{ form.locations }}
+                        <div class="form-text">{{ form.locations.help_text }}</div>
+                        {% for error in form.locations.errors %}<div class="invalid-feedback d-block">{{ error }}</div>{% endfor %}
+                    </div>
+
+                    <fieldset class="mb-3">
+                        <legend class="form-label fs-6">{{ form.employment_types.label }}</legend>
+                        {% for choice in form.employment_types %}
+                            <div class="form-check form-check-inline">
+                                {{ choice.tag }}
+                                <label class="form-check-label" for="{{ choice.id_for_label }}">{{ choice.choice_label }}</label>
+                            </div>
+                        {% endfor %}
+                        <div class="form-text">{{ form.employment_types.help_text }}</div>
+                    </fieldset>
+
+                    <div class="mb-3">
+                        <label class="form-label" for="{{ form.max_per_week.id_for_label }}">{{ form.max_per_week.label }}</label>
+                        {{ form.max_per_week }}
+                        {% for error in form.max_per_week.errors %}<div class="invalid-feedback d-block">{{ error }}</div>{% endfor %}
+                    </div>
+
+                    <div class="form-check mb-3">
+                        {{ form.consent }}
+                        <label class="form-check-label small" for="{{ form.consent.id_for_label }}">{{ form.consent.label }}</label>
+                        {% for error in form.consent.errors %}<div class="invalid-feedback d-block">{{ error }}</div>{% endfor %}
+                    </div>
+
+                    <button type="submit" class="btn btn-primary" data-loading-text="Saving…">Save settings</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-5">
+        <div class="card">
+            <div class="card-header fw-semibold">How auto-apply works</div>
+            <div class="card-body small">
+                <ul class="mb-0">
+                    <li>It is <strong>off</strong> until you switch it on and confirm.</li>
+                    <li>Once a day, we apply only to open jobs in this app that match <strong>all</strong> your rules.</li>
+                    <li>Your profile must be complete and set to <strong>Open to Work</strong>.</li>
+                    <li>No AI-written text: automatic applications have no cover note.</li>
+                    <li>Employers can see that the application was automatic.</li>
+                    <li>You can withdraw any application and switch auto-apply off at any time.</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

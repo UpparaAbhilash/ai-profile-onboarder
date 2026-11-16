@@ -5,12 +5,12 @@ from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator
 from django.db.models import Q
 from django.shortcuts import get_object_or_404, redirect, render
-from django.views.decorators.http import require_GET, require_POST
+from django.views.decorators.http import require_GET, require_http_methods, require_POST
 
 from profiles.models import JobSeekerProfile
 from profiles.services.completeness import missing_required_fields
 
-from .forms import ApplicationForm
+from .forms import ApplicationForm, AutoApplyForm
 from .models import Application, Job
 from .services.applications import (
     WITHDRAWABLE,
@@ -19,6 +19,7 @@ from .services.applications import (
     skill_match,
     withdraw_application,
 )
+from .services.auto_apply import AutoApplyError, get_rule, save_rule
 from .services.cover_note import CoverNoteError, generate_cover_note, take_draft_slot
 from .services.recommendations import MIN_MATCH_PERCENT, recommend_jobs
 
@@ -213,3 +214,43 @@ def withdraw(request, pk):
     else:
         messages.success(request, f"Your application for '{application.job.title}' was withdrawn.")
     return redirect("jobs:my_applications")
+@login_required
+@require_http_methods(["GET", "POST"])
+def auto_apply_settings(request):
+    """The candidate's auto-apply rules and consent. Nothing is applied here."""
+    profile = get_profile(request.user)
+    if profile is None:
+        messages.info(request, "Upload your resume first. We will create your profile from it.")
+        return redirect("resumes:upload")
+
+    rule = get_rule(profile)
+    if request.method == "POST":
+        form = AutoApplyForm(request.POST)
+        if form.is_valid():
+            data = form.cleaned_data
+            try:
+                save_rule(
+                    profile,
+                    request.user,
+                    enabled=data["enabled"],
+                    min_match_percent=data["min_match_percent"],
+                    locations=data["locations"],
+                    employment_types=data["employment_types"],
+                    max_per_week=data["max_per_week"],
+                )
+            except AutoApplyError as exc:
+                form.add_error(None, str(exc))
+            else:
+                if data["enabled"]:
+                    messages.success(
+                        request,
+                        f"Auto-apply is on. We will apply for you to matching jobs, "
+                        f"at most {data['max_per_week']} per week.",
+                    )
+                else:
+                    messages.success(request, "Auto-apply is off. We will not apply for you.")
+                return redirect("jobs:auto_apply")  # Post/Redirect/Get
+    else:
+        form = AutoApplyForm.from_rule(rule)
+
+    return render(request, "jobs/auto_apply.html", {"form": form, "rule": rule})
